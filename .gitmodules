@@ -1,0 +1,3 @@
+[submodule "emotion_server/mts"]
+	path = emotion_server/mts
+	url = https://github.com/texsmv/mtserie
