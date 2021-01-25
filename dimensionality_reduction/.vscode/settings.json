@@ -1,0 +1,6 @@
+{
+    "python.pythonPath": "/home/texs/anaconda3/envs/kusisqa/bin/python",
+    "python.linting.flake8Enabled": false,
+    "python.linting.enabled": true,
+    "python.linting.pylintEnabled": true
+}
