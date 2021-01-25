@@ -10,14 +10,16 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:touchable/touchable.dart';
 
-class LinearChartPainter extends CustomPainter {
-  // TemporalEData emotions;
-  PersonModel personModel;
+class ClusterLinearChartPainter extends CustomPainter {
+  String variableName;
+  List<PersonModel> personModels;
   BuildContext context;
 
-  // DataSettings dataSettings = Get.find();
-
-  LinearChartPainter({@required this.personModel, @required this.context});
+  ClusterLinearChartPainter({
+    @required this.personModels,
+    @required this.variableName,
+    @required this.context,
+  });
 
   Paint valuesPaint;
   Paint rectPaint;
@@ -41,12 +43,9 @@ class LinearChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     myCanvas = TouchyCanvas(context, canvas);
 
-    // print(
-    //     "Lenght: ${mtserie.timeSeries[dataProcesor.dimensions[0].value.name].tpoints.length}");
-
     _width = size.width;
     _height = size.height;
-    _dateHorizontalSpace = graphicWidth / (personModel.temporalLength - 1);
+    _dateHorizontalSpace = graphicWidth / (_seriesController.windowSize - 1);
 
     valuesPaint = Paint()
       ..color = Colors.grey
@@ -60,9 +59,7 @@ class LinearChartPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 2;
 
-    for (int i = 0; i < _seriesController.dimensions.length; i++) {
-      drawLines(canvas, _seriesController.dimensions[i].name);
-    }
+    drawLines(canvas);
   }
 
   void drawCanvasInfo(Canvas canvas) {
@@ -100,49 +97,23 @@ class LinearChartPainter extends CustomPainter {
     canvas.translate(-10, emotionValue2Heigh(0));
     canvas.rotate(pi / 2);
 
-    // for (int i = 0; i < personModel.length; i++) {
-    //   // todo: fix ontap
-    //   // myCanvas.drawRect(
-    //   //   Offset(i * _dateHorizontalSpace - 10, emotionValue2Heigh(0)) &
-    //   //       Size(40, 15),
-    //   //   Paint(),
-    //   //   onTapDown: (_) {
-    //   //     print("hiiiiiiioi");
-    //   //     print(emotions.data[i].date);
-    //   //   },
-    //   // );
-
-    //   // TODO change this
-
-    //   String dateStr = dateTimeHour2Str(mtserie
-    //       .timeSeries[dataProcesor.dimensions[0].value.name]
-    //       .tpoints[i]
-    //       .dateTime);
-    //   TextSpan span = new TextSpan(
-    //       style: new TextStyle(color: Colors.grey[800], fontSize: 12),
-    //       text: dateStr);
-    //   TextPainter tp = new TextPainter(
-    //       text: span,
-    //       textAlign: TextAlign.left,
-    //       textDirection: TextDirection.ltr);
-
-    //   canvas.translate(0, i * _dateHorizontalSpace);
-    //   // tp.layout();
-    //   // tp.paint(canvas,
-    //   //     new Offset(i * _dateHorizontalSpace - 10, emotionValue2Heigh(0)));
-    //   // tp.paint(canvas, new Offset(0, 0));
-    // }
     canvas.restore();
   }
 
-  void drawLines(Canvas canvas, String emotion) {
-    EmotionDimension emotionDimension = emotionDimensionByname(emotion);
+  void drawLines(Canvas canvas) {
+    String emotion = variableName;
 
-    Paint linePaint = Paint()
-      ..color = emotionDimension.color
+    Paint bluePaint = Paint()
+      ..color = Colors.blue
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = 5;
+      ..strokeWidth = 2;
+
+    Paint redPaint = Paint()
+      ..color = Colors.red
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 2;
 
     linePath = Path();
 
@@ -150,18 +121,16 @@ class LinearChartPainter extends CustomPainter {
     canvas.translate(_rightOffset, _topOffset);
 
     drawCanvasInfo(canvas);
-
-    for (int i = 0; i < personModel.values[emotion].length - 1; i++) {
-      canvas.drawLine(
-        Offset(i * _dateHorizontalSpace,
-            emotionValue2Heigh(personModel.values[emotion][i])),
-        Offset((i + 1) * _dateHorizontalSpace,
-            emotionValue2Heigh(personModel.values[emotion][i + 1])),
-        linePaint,
-        //     onTapDown: (tapDownDetails) {
-        //   print("hiii");
-        // }, hitTestBehavior: HitTestBehavior.translucent
-      );
+    for (var k = 0; k < personModels.length; k++) {
+      for (int i = 0; i < _seriesController.windowSize - 1; i++) {
+        canvas.drawLine(
+          Offset(i * _dateHorizontalSpace,
+              emotionValue2Heigh(personModels[k].values[emotion][i])),
+          Offset((i + 1) * _dateHorizontalSpace,
+              emotionValue2Heigh(personModels[k].values[emotion][i + 1])),
+          personModels[k].clusterId == 0 ? bluePaint : redPaint,
+        );
+      }
     }
     canvas.restore();
   }

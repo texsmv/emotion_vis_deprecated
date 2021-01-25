@@ -1,7 +1,10 @@
-import 'package:emotion_vis/interfaces/initial_settings/initialSettingsIndex.dart';
+import 'package:emotion_vis/controllers/series_controller.dart';
+import 'package:emotion_vis/routes/route_names.dart';
 import 'package:emotion_vis/tests/linear_chart_test.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import 'initial_settings/initial_settings_index.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -9,6 +12,7 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  SeriesController seriesController = Get.find();
   @override
   void initState() {
     super.initState();
@@ -62,12 +66,18 @@ class _SplashScreenState extends State<SplashScreen> {
   /// Initial settings and configurations should be called here
   void startSettings() async {
     // Here gets the initial data
+    await seriesController.loadValuesInRange(0, seriesController.windowSize);
+    await seriesController.loadFeatures();
+    // await seriesController.setEmotionAlphas([0.5, 0.5, 0.5, 0.5, 0.5]);
+
+    await Future.delayed(Duration(milliseconds: 900));
     route();
   }
 
   // * Here you can define where to route after the splashScreen
   void route() {
     // Get.to(LinearChartTest());
-    Get.to(InitialSettingsIndex());
+    // Get.toNamed(RouteNames.INITIAL_SETTINGS);
+    Get.toNamed(RouteNames.HOME);
   }
 }

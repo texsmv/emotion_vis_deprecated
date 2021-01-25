@@ -1,0 +1,4 @@
+enum NotifierState {
+  ERROR,
+  SUCCESS,
+}

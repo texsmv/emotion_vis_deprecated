@@ -1,15 +1,17 @@
 import 'dart:math';
 import 'dart:ui';
-import 'package:emotion_vis/controllers/data_settings.dart';
+import 'package:emotion_vis/controllers/series_controller.dart';
+import 'package:emotion_vis/models/person_model.dart';
 import 'package:emotion_vis/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class InstantRadarPainter extends CustomPainter {
-  DataSettings dataSettings = Get.find();
+  SeriesController _seriesController = Get.find();
   double width;
-  final List<String> emotionsLabels;
-  final List<double> emotionsValues;
+  // final List<String> emotionsLabels;
+  // final List<double> emotionsValues;
+  PersonModel personModel;
 
   double _numberRings = 3;
   double _sweepAngle;
@@ -23,13 +25,12 @@ class InstantRadarPainter extends CustomPainter {
 
   InstantRadarPainter({
     this.width = 5,
-    @required this.emotionsLabels,
-    @required this.emotionsValues,
+    @required this.personModel,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    _emotionsNumber = emotionsLabels.length;
+    _emotionsNumber = _seriesController.dimensions.length;
     _sweepAngle = 2 * pi / _emotionsNumber;
     _center = Offset(size.width / 2, size.height / 2);
     _radius = min(size.width / 2, size.height / 2) * 0.8;
@@ -78,7 +79,7 @@ class InstantRadarPainter extends CustomPainter {
     for (int i = 0; i < _emotionsNumber; i++) {
       TextSpan span = new TextSpan(
           style: new TextStyle(color: Colors.black, fontSize: _radius * 0.1),
-          text: emotionsLabels[i]);
+          text: _seriesController.dimensions[i].name);
       TextPainter tp = new TextPainter(
           text: span,
           textAlign: TextAlign.center,
@@ -103,14 +104,17 @@ class InstantRadarPainter extends CustomPainter {
 
     offset = polarToCartesian(
         _sweepAngle * (_emotionsNumber - 1),
-        emotionsValues[_emotionsNumber - 1] /
-            dataSettings.emotionMaxValue *
+        personModel.values[_seriesController.dimensions.last.name].last /
+            _seriesController.upperBound *
             _radius);
     emotionsPath.moveTo(offset.dx, offset.dy);
 
-    for (int i = 0; i < _emotionsNumber; i++) {
-      offset = polarToCartesian(_sweepAngle * i,
-          ((emotionsValues[i] / dataSettings.emotionMaxValue)) * _radius);
+    for (int i = 0; i < _seriesController.dimensions.length; i++) {
+      offset = polarToCartesian(
+          _sweepAngle * i,
+          ((personModel.values[_seriesController.dimensions[i].name].last /
+                  _seriesController.upperBound)) *
+              _radius);
       emotionsPath.lineTo(offset.dx, offset.dy);
     }
 

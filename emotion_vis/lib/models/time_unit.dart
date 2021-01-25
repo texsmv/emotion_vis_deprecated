@@ -1,0 +1,1 @@
+enum TimeUnit { MINUTE, HOUR, DAY, WEEK, MONTH, YEAR }
