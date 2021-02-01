@@ -113,10 +113,11 @@ class InitialSettingsController extends GetxController {
     update();
   }
 
-  void applyViewChanges(int index) {
+  Future<void> applyViewChanges(int index) async {
     if (index == 0) {
-      _seriesController.setBounds(double.parse(lowerBoundController.text),
+      await _seriesController.setBounds(double.parse(lowerBoundController.text),
           double.parse(upperBoundController.text));
+      await _seriesController.removeMarkedVariables();
     }
     if (index == 1) {
       // TODO: process without reference copy
@@ -126,19 +127,20 @@ class InitialSettingsController extends GetxController {
           newWindowStep: double.parse(windowBiasUnitQuantity.text).toInt());
       // TODO choose the initial visualizations
     }
+    return;
   }
 
-  void onNextButtom() {
+  void onNextButtom() async {
     if (stackIndex.value < 2) {
       int newIndex = stackIndex.value + 1;
       if (validateStackView(stackIndex.value)) {
-        applyViewChanges(stackIndex.value);
+        await applyViewChanges(stackIndex.value);
         canVisitIndexPage[newIndex].value = true;
         stackIndex.value = newIndex;
       }
     } else if (stackIndex.value == 2) {
       if (validateStackView(stackIndex.value)) {
-        applyViewChanges(stackIndex.value);
+        await applyViewChanges(stackIndex.value);
         // Get.toNamed(RouteNames.HOME);
         Get.toNamed(RouteNames.SPLASH_ROUTE);
       }
@@ -152,7 +154,6 @@ class InitialSettingsController extends GetxController {
         await FilePicker.platform.pickFiles(allowMultiple: true);
     if (result != null) {
       await _seriesController.initializeDataset();
-
       personsNumber.value = result.files.length;
       print("Number of files: ${result.files.length}");
       await Future.delayed(Duration(milliseconds: 500));
@@ -166,10 +167,6 @@ class InitialSettingsController extends GetxController {
         NotifierState state =
             await _seriesController.addEml(xmlString, isCategorical);
         print(state);
-
-        // XmlDocument emotionsXml = XmlDocument.parse(xmlString);
-        // PersonModel personModel = await dataFetcher.loadPersonData(emotionsXml);
-        // if (personModel == null) Get.snackbar("Cargado de datos", "error");
         currentNumber.value = i;
         await Future.delayed(Duration(milliseconds: 100));
       }

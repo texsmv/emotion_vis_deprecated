@@ -1,55 +1,56 @@
 import 'dart:math';
 
-import 'package:emotion_vis/controllers/series_controller.dart';
-import 'package:emotion_vis/models/emotion_dimension.dart';
 import 'package:emotion_vis/models/person_model.dart';
-import 'package:emotion_vis/time_series/models/MTSerie.dart';
-import 'package:emotion_vis/utils/utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:touchable/touchable.dart';
 
+import '../../vis_settings.dart';
+import '../../vis_utils.dart';
+
 class LinearChartPainter extends CustomPainter {
-  // TemporalEData emotions;
   PersonModel personModel;
-  BuildContext context;
+  VisSettings visSettings;
+  final BuildContext context;
+  int segmentsNumber;
 
-  // DataSettings dataSettings = Get.find();
+  LinearChartPainter({
+    @required this.personModel,
+    @required this.visSettings,
+    @required this.context,
+    this.segmentsNumber = 10,
+  });
 
-  LinearChartPainter({@required this.personModel, @required this.context});
-
-  Paint valuesPaint;
+  Paint infoPaint;
   Paint rectPaint;
 
   double _width;
   double _height;
-  double _dateHorizontalSpace;
-  double _leftOffset = 30;
-  double _rightOffset = 70;
-  double _topOffset = 20;
-  double _bottomOffset = 20;
+  double _horizontalValuesSpace;
+  double _infoPointRadius = 6;
+  double _leftOffset = 80;
+  double _rightOffset = 100;
+  double _topOffset = 30;
+  double _bottomOffset = 80;
 
-  double get graphicWidth => (_width - _rightOffset - _leftOffset);
-  double get graphicHeight => (_height - _topOffset - _bottomOffset);
+  double get _graphicWidth => (_width - _rightOffset - _leftOffset);
+  double get _graphicHeight => (_height - _topOffset - _bottomOffset);
 
   Path linePath;
-  TouchyCanvas myCanvas;
-  SeriesController _seriesController = Get.find();
+  TouchyCanvas touchyCanvas;
 
   @override
   void paint(Canvas canvas, Size size) {
-    myCanvas = TouchyCanvas(context, canvas);
-
-    // print(
-    //     "Lenght: ${mtserie.timeSeries[dataProcesor.dimensions[0].value.name].tpoints.length}");
+    touchyCanvas = TouchyCanvas(context, canvas);
 
     _width = size.width;
     _height = size.height;
-    _dateHorizontalSpace = graphicWidth / (personModel.temporalLength - 1);
+    _horizontalValuesSpace =
+        _graphicWidth / (personModel.mtSerie.timeLength - 1);
 
-    valuesPaint = Paint()
-      ..color = Colors.grey
+    infoPaint = Paint()
+      ..color = Color.fromARGB(255, 220, 220, 220)
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 2;
@@ -60,115 +61,129 @@ class LinearChartPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 2;
 
-    for (int i = 0; i < _seriesController.dimensions.length; i++) {
-      drawLines(canvas, _seriesController.dimensions[i].name);
+    drawCanvasInfo(canvas);
+    for (int i = 0; i < personModel.mtSerie.variablesLength; i++) {
+      drawLines(canvas, personModel.mtSerie.variablesNames[i]);
     }
   }
 
   void drawCanvasInfo(Canvas canvas) {
-    for (int i = 0; i <= 10; i++) {
+    for (int i = 0; i <= segmentsNumber; i++) {
+      // draw horizontal lines
+      double lineHeight = plotHeightFromValue(
+          (visSettings.limitSize / segmentsNumber * i) +
+              visSettings.lowerLimit);
       canvas.drawLine(
-          Offset(
-              0, emotionValue2Heigh(_seriesController.upperBound / 10.0 * i)),
-          Offset(graphicWidth,
-              emotionValue2Heigh(_seriesController.upperBound / 10.0 * i)),
-          valuesPaint);
-    }
-    for (int i = 0; i <= 10; i++) {
-      canvas.drawLine(
-          Offset(
-              -40, emotionValue2Heigh(_seriesController.upperBound / 10.0 * i)),
-          Offset(graphicWidth + _leftOffset,
-              emotionValue2Heigh(_seriesController.upperBound / 10.0 * i)),
-          valuesPaint);
+        Offset(_leftOffset, lineHeight),
+        Offset(_leftOffset + _graphicWidth, lineHeight),
+        infoPaint,
+      );
 
-      double value = (_seriesController.upperBound / 10.0 * i);
+      // draw lines text
+      double value =
+          (visSettings.limitSize / segmentsNumber * i) + visSettings.lowerLimit;
       TextSpan span = new TextSpan(
           style: new TextStyle(color: Colors.grey[800], fontSize: 12),
           text: value.toStringAsFixed(1));
       TextPainter tp = new TextPainter(
           text: span,
-          textAlign: TextAlign.left,
+          textAlign: TextAlign.right,
           textDirection: TextDirection.ltr);
       tp.layout();
       tp.paint(
-          canvas,
-          new Offset(-60,
-              emotionValue2Heigh(_seriesController.upperBound / 10.0 * i) - 8));
+        canvas,
+        new Offset(5, lineHeight - 7),
+      );
     }
-    canvas.save();
-    canvas.translate(-10, emotionValue2Heigh(0));
-    canvas.rotate(pi / 2);
+    // canvas.translate(-10, plotHeightFromValue(0));
+    // canvas.rotate(pi / 2);
 
-    // for (int i = 0; i < personModel.length; i++) {
-    //   // todo: fix ontap
-    //   // myCanvas.drawRect(
-    //   //   Offset(i * _dateHorizontalSpace - 10, emotionValue2Heigh(0)) &
-    //   //       Size(40, 15),
-    //   //   Paint(),
-    //   //   onTapDown: (_) {
-    //   //     print("hiiiiiiioi");
-    //   //     print(emotions.data[i].date);
-    //   //   },
-    //   // );
+    for (int i = 0; i < personModel.mtSerie.timeLength; i++) {
+      double textHeight = 14;
+      double regionWidth = 40;
+      touchyCanvas.drawRect(
+        Offset(plotWidthFromValue(i.toDouble()) - regionWidth / 2,
+                plotHeightFromValue(visSettings.upperLimit)) &
+            Size(regionWidth, (_graphicHeight + textHeight)),
+        Paint()..color = Colors.transparent,
+        // Paint(),
+        hitTestBehavior: HitTestBehavior.opaque,
+        paintStyleForTouch: PaintingStyle.fill,
+        onTapDown: (_) {
+          print("por fin");
+        },
+      );
 
-    //   // TODO change this
+      // TODO change this
 
-    //   String dateStr = dateTimeHour2Str(mtserie
-    //       .timeSeries[dataProcesor.dimensions[0].value.name]
-    //       .tpoints[i]
-    //       .dateTime);
-    //   TextSpan span = new TextSpan(
-    //       style: new TextStyle(color: Colors.grey[800], fontSize: 12),
-    //       text: dateStr);
-    //   TextPainter tp = new TextPainter(
-    //       text: span,
-    //       textAlign: TextAlign.left,
-    //       textDirection: TextDirection.ltr);
+      String timeLabel = visSettings.timeLabels[i];
+      TextSpan span = new TextSpan(
+          style: new TextStyle(color: Colors.grey[800], fontSize: 12),
+          text: timeLabel);
+      TextPainter tp = new TextPainter(
+          text: span,
+          textAlign: TextAlign.left,
+          textDirection: TextDirection.ltr);
 
-    //   canvas.translate(0, i * _dateHorizontalSpace);
-    //   // tp.layout();
-    //   // tp.paint(canvas,
-    //   //     new Offset(i * _dateHorizontalSpace - 10, emotionValue2Heigh(0)));
-    //   // tp.paint(canvas, new Offset(0, 0));
-    // }
-    canvas.restore();
+      // canvas.translate(0, i * _horizontalValuesSpace);
+      tp.layout();
+      tp.paint(
+          canvas,
+          new Offset(plotWidthFromValue(i.toDouble()),
+              plotHeightFromValue(visSettings.lowerLimit)));
+    }
   }
 
   void drawLines(Canvas canvas, String emotion) {
-    EmotionDimension emotionDimension = emotionDimensionByname(emotion);
-
     Paint linePaint = Paint()
-      ..color = emotionDimension.color
+      ..color = visSettings.colors[emotion]
       ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 5;
+    Paint circlePaint = Paint()
+      ..color = visSettings.colors[emotion]
+      ..style = PaintingStyle.fill
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 5;
 
     linePath = Path();
 
     canvas.save();
-    canvas.translate(_rightOffset, _topOffset);
 
-    drawCanvasInfo(canvas);
-
-    for (int i = 0; i < personModel.values[emotion].length - 1; i++) {
+    for (int i = 0; i < personModel.mtSerie.timeLength - 1; i++) {
+      Offset from = Offset(plotWidthFromValue(i.toDouble()),
+          plotHeightFromValue(personModel.mtSerie.at(i, emotion)));
+      Offset to = Offset(plotWidthFromValue((i + 1).toDouble()),
+          plotHeightFromValue(personModel.mtSerie.at(i + 1, emotion)));
       canvas.drawLine(
-        Offset(i * _dateHorizontalSpace,
-            emotionValue2Heigh(personModel.values[emotion][i])),
-        Offset((i + 1) * _dateHorizontalSpace,
-            emotionValue2Heigh(personModel.values[emotion][i + 1])),
+        from,
+        to,
         linePaint,
-        //     onTapDown: (tapDownDetails) {
-        //   print("hiii");
-        // }, hitTestBehavior: HitTestBehavior.translucent
       );
+      canvas.drawCircle(to, _infoPointRadius, circlePaint);
     }
+
     canvas.restore();
   }
 
-  double emotionValue2Heigh(double value) {
-    return graphicHeight -
-        (value / _seriesController.upperBound * graphicHeight);
+  double plotHeightFromValue(double value) {
+    return _height -
+        VisUtils.toNewRange(
+          value,
+          visSettings.lowerLimit,
+          visSettings.upperLimit,
+          _bottomOffset,
+          _bottomOffset + _graphicHeight,
+        );
+  }
+
+  double plotWidthFromValue(double value) {
+    return VisUtils.toNewRange(
+        value,
+        0,
+        personModel.mtSerie.timeLength.toDouble() - 1,
+        _leftOffset,
+        _leftOffset + _graphicWidth);
   }
 
   @override

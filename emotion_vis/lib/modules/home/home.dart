@@ -1,5 +1,5 @@
 import 'package:emotion_vis/controllers/series_controller.dart';
-import 'package:emotion_vis/controllers/visualization_controller.dart';
+import 'package:emotion_vis/modules/home/components/clusteredView.dart';
 import 'package:emotion_vis/modules/home/components/settings_view.dart';
 import 'package:emotion_vis/modules/home/components/temporal_multi_view.dart';
 import 'package:emotion_vis/modules/home/home_controller.dart';
@@ -30,15 +30,15 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
 
     controller.reproduceController =
         AnimationController(vsync: this, duration: Duration(seconds: 2));
-    controller.reproduceController.addStatusListener((status) {
-      if (status == AnimationStatus.completed && controller.play) {
-        controller.reproduceController.reverse();
-        controller.nextWindow();
-      } else if (status == AnimationStatus.dismissed && controller.play) {
-        controller.reproduceController.forward();
-        controller.nextWindow();
-      }
-    });
+    // controller.reproduceController.addStatusListener((status) {
+    //   if (status == AnimationStatus.completed && controller.play) {
+    //     controller.reproduceController.reverse();
+    //     controller.nextWindow();
+    //   } else if (status == AnimationStatus.dismissed && controller.play) {
+    //     controller.reproduceController.forward();
+    //     controller.nextWindow();
+    //   }
+    // });
 
     super.initState();
   }
@@ -98,60 +98,237 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                     //         child: Container(),
                     //       ),
                     //     )),
-                    // Expanded(
-                    //   flex: 6,
-                    //   child: Container(
-                    //     child: Row(
-                    //       children: [
-                    //         // Temporal section
-                    //         Expanded(
-                    //             flex: 3,
-                    //             child: Container(
-                    //               child: SectionContainer(
-                    //                 child: GetBuilder<SeriesController>(
-                    //                     builder: (_) => TemporalView()),
-                    //               ),
-                    //             )),
-                    //         // Instant section
-                    //         Expanded(
-                    //             flex: 2,
-                    //             child: Container(
-                    //               child: SectionConretainer(
-                    //                 child: GetBuilder<SeriesController>(
-                    //                     builder: (_) => InstantView()),
-                    //               ),
-                    //             ))
-                    //       ],
-                    //     ),
-                    //   ),
-                    // )
+                    GetBuilder<SeriesController>(
+                      builder: (_) => Visibility(
+                        visible: controller.queriedPersonData != null,
+                        child: Container(
+                          height: 400,
+                          width: double.infinity,
+                          child: SectionContainer(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 10),
+                                  height: 72,
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceAround,
+                                        children: [
+                                          Text(
+                                            "Categorical features:",
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                          Text(
+                                            "Numerical features:",
+                                            style: TextStyle(color: Colors.red),
+                                          )
+                                        ],
+                                      ),
+                                      Expanded(
+                                        child: Column(
+                                          children: [
+                                            Expanded(
+                                              child: Container(
+                                                width: double.infinity,
+                                                child: controller
+                                                            .queriedPersonData !=
+                                                        null
+                                                    ? ListView.separated(
+                                                        separatorBuilder:
+                                                            (context, index) =>
+                                                                SizedBox(
+                                                                    width: 10),
+                                                        scrollDirection:
+                                                            Axis.horizontal,
+                                                        itemCount: controller
+                                                            .queriedPersonData
+                                                            .categoricalLabels
+                                                            .length,
+                                                        itemBuilder:
+                                                            (context, pindex) {
+                                                          return Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                        .symmetric(
+                                                                    vertical:
+                                                                        10,
+                                                                    horizontal:
+                                                                        30),
+                                                            child: Row(
+                                                              children: [
+                                                                Text(
+                                                                  controller
+                                                                          .queriedPersonData
+                                                                          .categoricalLabels[pindex] +
+                                                                      ":",
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w600,
+                                                                  ),
+                                                                ),
+                                                                SizedBox(
+                                                                    width: 5),
+                                                                Text(
+                                                                  controller
+                                                                      .queriedPersonData
+                                                                      .categoricalValues[pindex],
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w400,
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          );
+                                                        },
+                                                      )
+                                                    : SizedBox(),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Container(
+                                                width: double.infinity,
+                                                child: controller
+                                                            .queriedPersonData !=
+                                                        null
+                                                    ? ListView.separated(
+                                                        separatorBuilder:
+                                                            (context, index) =>
+                                                                SizedBox(
+                                                                    width: 10),
+                                                        scrollDirection:
+                                                            Axis.horizontal,
+                                                        itemCount: controller
+                                                            .queriedPersonData
+                                                            .numericalLabels
+                                                            .length,
+                                                        itemBuilder:
+                                                            (context, pindex) {
+                                                          return Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                        .symmetric(
+                                                                    vertical:
+                                                                        10,
+                                                                    horizontal:
+                                                                        30),
+                                                            child: Row(
+                                                              children: [
+                                                                Text(
+                                                                  controller
+                                                                          .queriedPersonData
+                                                                          .numericalLabels[pindex] +
+                                                                      ":",
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w600,
+                                                                  ),
+                                                                ),
+                                                                SizedBox(
+                                                                    width: 5),
+                                                                Text(
+                                                                  controller
+                                                                      .queriedPersonData
+                                                                      .numericalValues[
+                                                                          pindex]
+                                                                      .toString(),
+                                                                  style:
+                                                                      TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .w400,
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                          );
+                                                        },
+                                                      )
+                                                    : SizedBox(),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.close,
+                                          color: Colors.red,
+                                        ),
+                                        onPressed: () {
+                                          Get.find<SeriesController>()
+                                              .selectedPerson = null;
+                                        },
+                                      )
+                                    ],
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      // Temporal section
+                                      Expanded(
+                                        flex: 3,
+                                        child: Container(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.center,
+                                            children: [
+                                              Text("Temporal view"),
+                                              Expanded(
+                                                child: GetBuilder<
+                                                        SeriesController>(
+                                                    builder: (_) =>
+                                                        TemporalView()),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      // Instant section
+                                      Expanded(
+                                        flex: 2,
+                                        child: Container(
+                                          child: Column(
+                                            children: [
+                                              Text("Instant view"),
+                                              Expanded(
+                                                child: GetBuilder<
+                                                        SeriesController>(
+                                                    builder: (_) =>
+                                                        InstantView()),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
                   ],
                 ),
               ),
             ),
             Expanded(
               flex: 3,
-              child: Container(
-                child: GetBuilder<SeriesController>(
-                  builder: (_) => ListView.builder(
-                    itemCount: controller.variablesNames.length,
-                    itemBuilder: (context, index) {
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 10),
-                        child: Container(
-                          height: 200,
-                          width: 600,
-                          child: ClusterLinearChart(
-                            personModels: controller.clusteredPersons,
-                            variableName: controller.variablesNames[index],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
+              child: ClusteredView(),
             )
           ],
         ),
@@ -168,11 +345,12 @@ class _HomeState extends State<Home> with TickerProviderStateMixin {
                   width: 50,
                   height: 50,
                   decoration: BoxDecoration(
-                      border: Border.all(
-                        color: Colors.white.withAlpha(0),
-                      ),
-                      color: Get.theme.primaryColor,
-                      borderRadius: BorderRadius.all(Radius.circular(40))),
+                    border: Border.all(
+                      color: Colors.white.withAlpha(0),
+                    ),
+                    color: Get.theme.primaryColor,
+                    borderRadius: BorderRadius.all(Radius.circular(40)),
+                  ),
                   alignment: Alignment.center,
                   child: AnimatedIcon(
                     color: Colors.white,

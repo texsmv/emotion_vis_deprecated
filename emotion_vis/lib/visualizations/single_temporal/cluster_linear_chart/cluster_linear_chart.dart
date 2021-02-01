@@ -8,9 +8,14 @@ import 'package:touchable/touchable.dart';
 import 'cluster_linear_chart_painter.dart';
 
 class ClusterLinearChart extends StatefulWidget {
-  List<PersonModel> personModels;
+  List<PersonModel> blueCluster;
+  List<PersonModel> redCluster;
   String variableName;
-  ClusterLinearChart({Key key, @required this.personModels, this.variableName})
+  ClusterLinearChart(
+      {Key key,
+      @required this.blueCluster,
+      @required this.variableName,
+      @required this.redCluster})
       : super(key: key);
 
   @override
@@ -24,7 +29,8 @@ class _ClusterLinearChartState extends State<ClusterLinearChart> {
       builder: (context) => CustomPaint(
         painter: ClusterLinearChartPainter(
           context: context,
-          personModels: widget.personModels,
+          blueCluster: widget.blueCluster,
+          redCluster: widget.redCluster,
           variableName: widget.variableName,
         ),
       ),

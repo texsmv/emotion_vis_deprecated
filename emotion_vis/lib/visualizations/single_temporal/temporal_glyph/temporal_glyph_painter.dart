@@ -1,106 +1,86 @@
 import 'dart:math';
 
-import 'package:emotion_vis/controllers/series_controller.dart';
-import 'package:emotion_vis/models/emotion_dimension.dart';
 import 'package:emotion_vis/models/person_model.dart';
-import 'package:emotion_vis/time_series/models/MTSerie.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../vis_settings.dart';
+import '../../vis_utils.dart';
+
 class TemporalGlyphPainter extends CustomPainter {
-  SeriesController _seriesController = Get.find();
-
   PersonModel personModel;
+  VisSettings visSettings;
 
-  Offset center;
-  double width;
-  double height;
-  double radius;
-
-  Paint dominanceLightPaint;
-  Paint valenceLightPaint;
-  Paint arousalLightPaint;
-  Paint dominancePaint;
-  Paint valencePaint;
-  Paint arousalPaint;
-
-  /// this variable is set in [drawArcsByValues]
-  int seriesLenght;
-  int segmentNumber = 8;
+  Offset _center;
+  double _width;
+  double _height;
+  double _radius;
+  double _centerRadius = 16;
+  double borderOffset = 17;
+  int segmentNumber = 10;
 
   double angleOffset = 0 - pi / 2;
-  double arcSize = 2 * pi * 1 / 3;
+  double arcSize;
 
-  TemporalGlyphPainter({this.personModel}) {
-    // print(
-    //     "Lenght: ${mtSerie.timeSeries[dataProcesor.dimensions[0].value.name].tpoints.length}");
-    dominanceLightPaint = Paint()
-      ..color = _seriesController.dominanceColor.withOpacity(0.1)
-      ..style = PaintingStyle.fill
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 2;
+  int get timeLength => personModel.mtSerie.timeLength;
+  int get varLength => personModel.mtSerie.variablesLength;
 
-    dominancePaint = Paint()
-      ..color = _seriesController.dominanceColor
-      ..style = PaintingStyle.fill
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 2;
+  final _textPainter = TextPainter(textDirection: TextDirection.ltr);
 
-    valenceLightPaint = Paint()
-      ..color = _seriesController.valenceColor.withOpacity(0.1)
-      ..style = PaintingStyle.fill
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 2;
-
-    valencePaint = Paint()
-      ..color = _seriesController.valenceColor
-      ..style = PaintingStyle.fill
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 2;
-
-    arousalLightPaint = Paint()
-      ..color = _seriesController.arousalColor.withOpacity(0.1)
-      ..style = PaintingStyle.fill
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 2;
-
-    arousalPaint = Paint()
-      ..color = _seriesController.arousalColor
-      ..style = PaintingStyle.fill
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = 2;
-  }
+  TemporalGlyphPainter({this.personModel, this.visSettings, this.borderOffset});
 
   @override
   void paint(Canvas canvas, Size size) {
-    width = size.width;
-    height = size.height;
-    radius = min(size.width / 2, size.height / 2);
-    center = Offset(size.width / 2, size.height / 2);
+    _width = size.width;
+    _height = size.height;
+    _radius = min(size.width / 2, size.height / 2);
+
+    _center = Offset(size.width / 2, size.height / 2);
+    arcSize = 2 * pi / personModel.mtSerie.variablesLength;
+
     drawBackground(canvas);
     drawArcsByValues(canvas);
     drawDivisions(canvas);
+
+    canvas.translate(size.width / 2, size.height / 2 - _radius);
+    for (var i = 0; i < varLength; i++) {
+      canvas.save();
+      double initialAngle = 2 * pi / varLength * i + arcSize / 2;
+
+      if (initialAngle != 0) {
+        final d = 2 * _radius * sin(initialAngle / 2);
+        final rotationAngle = _calculateRotationAngle(0, initialAngle);
+        canvas.rotate(rotationAngle);
+        canvas.translate(d, 0);
+      }
+      double angle = initialAngle;
+      String text = visSettings.variablesNames[i];
+
+      for (int i = 0; i < text.length; i++) {
+        angle = _drawLetter(canvas, text[i], angle);
+      }
+      canvas.restore();
+    }
   }
 
   void drawArcsByValues(Canvas canvas) {
-    for (var i = 0; i < _seriesController.dimensions.length; i++) {
-      String dimensionName = _seriesController.dimensions[i].name;
-      seriesLenght = personModel.values[dimensionName].length;
-      double segmentArcSize = arcSize / seriesLenght;
-      for (var j = 0; j < seriesLenght; j++) {
-        int arcValue =
-            segmentNumberByValue(personModel.values[dimensionName][j]);
+    for (var i = 0; i < visSettings.variablesNames.length; i++) {
+      String dimensionName = visSettings.variablesNames[i];
+      double segmentArcSize = arcSize / timeLength;
+      for (var j = 0; j < timeLength; j++) {
+        double currRadius =
+            radiusByValue(personModel.mtSerie.at(j, dimensionName));
         canvas.drawArc(
-            Rect.fromCenter(
-              center: center,
-              width: radius * 2 * arcValue / segmentNumber,
-              height: radius * 2 * arcValue / segmentNumber,
-            ),
-            angleOffset + (arcSize * i) + segmentArcSize * j,
-            segmentArcSize,
-            true,
-            paintByDimension(
-                _seriesController.dimensions[i].dimensionalDimension));
+          Rect.fromCenter(
+            center: _center,
+            width: currRadius * 2,
+            height: currRadius * 2,
+          ),
+          angleOffset + (arcSize * i) + segmentArcSize * j,
+          segmentArcSize,
+          true,
+          Paint()..color = visSettings.colors[dimensionName],
+        );
       }
     }
   }
@@ -112,45 +92,70 @@ class TemporalGlyphPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 1;
 
-    double divisionSize = 2 * pi / (seriesLenght * 3);
-    for (var i = 0; i < seriesLenght * 3; i++) {
+    double divisionSize = 2 * pi / (varLength * timeLength);
+    for (var i = 0; i < timeLength * varLength; i++) {
       canvas.drawArc(
-          Rect.fromCenter(
-              center: center, width: radius * 2, height: radius * 2),
-          angleOffset + i * divisionSize,
-          divisionSize,
-          true,
-          divisionPaint);
+        Rect.fromCenter(
+            center: _center, width: _radius * 2, height: _radius * 2),
+        angleOffset + i * divisionSize,
+        divisionSize,
+        true,
+        divisionPaint,
+      );
     }
     for (var i = 0; i < segmentNumber; i++) {
-      canvas.drawCircle(center, radius * i / 8, divisionPaint);
+      canvas.drawCircle(
+        _center,
+        _centerRadius + (_radius - _centerRadius) * i / segmentNumber,
+        divisionPaint,
+      );
     }
   }
 
   void drawBackground(Canvas canvas) {
-    for (var i = 0; i < _seriesController.dimensions.length; i++) {
+    for (var i = 0; i < visSettings.variablesNames.length; i++) {
       canvas.drawArc(
-          Rect.fromCenter(
-            center: center,
-            width: radius * 2,
-            height: radius * 2,
-          ),
-          angleOffset + (arcSize * i),
-          arcSize,
-          true,
-          lightPaintByDimension(
-              _seriesController.dimensions[i].dimensionalDimension));
+        Rect.fromCenter(
+          center: _center,
+          width: (_radius + borderOffset) * 2,
+          height: (_radius + borderOffset) * 2,
+        ),
+        angleOffset + (arcSize * i),
+        arcSize,
+        true,
+        Paint()..color = visSettings.colors[visSettings.variablesNames[i]],
+      );
     }
+    canvas.drawCircle(
+      _center,
+      _radius,
+      Paint()..color = Colors.white,
+    );
+    for (var i = 0; i < visSettings.variablesNames.length; i++) {
+      canvas.drawArc(
+        Rect.fromCenter(
+          center: _center,
+          width: _radius * 2,
+          height: _radius * 2,
+        ),
+        angleOffset + (arcSize * i),
+        arcSize,
+        true,
+        Paint()
+          ..color = visSettings.colors[visSettings.variablesNames[i]]
+              .withOpacity(0.25),
+      );
+    }
+    canvas.drawCircle(
+      _center,
+      _centerRadius,
+      Paint()..color = Colors.white,
+    );
   }
 
-  int segmentNumberByValue(double oldValue) {
-    double oldMin = _seriesController.lowerBound;
-    double oldMax = _seriesController.upperBound;
-    double newMax = segmentNumber.toDouble();
-
-    double newValue =
-        (((oldValue - oldMin) * (newMax - 1)) / (oldMax - oldMin)) + 1;
-    return newValue.toInt();
+  double radiusByValue(double oldValue) {
+    return VisUtils.toNewRange(oldValue, visSettings.lowerLimit,
+        visSettings.upperLimit, _centerRadius, _radius);
   }
 
   @override
@@ -158,31 +163,26 @@ class TemporalGlyphPainter extends CustomPainter {
     return true;
   }
 
-  Paint paintByDimension(DimensionalDimension dimensionalDimension) {
-    switch (dimensionalDimension) {
-      case DimensionalDimension.VALENCE:
-        return valencePaint;
-      case DimensionalDimension.DOMINANCE:
-        return dominancePaint;
-      case DimensionalDimension.AROUSAL:
-        return arousalPaint;
+  double _drawLetter(Canvas canvas, String letter, double prevAngle) {
+    _textPainter.text = TextSpan(
+        text: letter, style: TextStyle(fontSize: 14, color: Colors.white));
+    _textPainter.layout(
+      minWidth: 0,
+      maxWidth: double.maxFinite,
+    );
 
-        break;
-      default:
-    }
+    final double d = _textPainter.width;
+    final double alpha = 2 * asin(d / (2 * _radius));
+
+    final newAngle = _calculateRotationAngle(prevAngle, alpha);
+    canvas.rotate(newAngle);
+
+    _textPainter.paint(canvas, Offset(0, -_textPainter.height));
+    canvas.translate(d, 0);
+
+    return alpha;
   }
 
-  Paint lightPaintByDimension(DimensionalDimension dimensionalDimension) {
-    switch (dimensionalDimension) {
-      case DimensionalDimension.VALENCE:
-        return valenceLightPaint;
-      case DimensionalDimension.DOMINANCE:
-        return dominanceLightPaint;
-      case DimensionalDimension.AROUSAL:
-        return arousalLightPaint;
-
-        break;
-      default:
-    }
-  }
+  double _calculateRotationAngle(double prevAngle, double alpha) =>
+      (alpha + prevAngle) / 2;
 }

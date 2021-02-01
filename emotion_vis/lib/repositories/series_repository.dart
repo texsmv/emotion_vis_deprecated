@@ -64,6 +64,13 @@ class SeriesRepository {
     return queryMap;
   }
 
+  static Future<Map<String, dynamic>> getAllMetadata() async {
+    var response = await post(urlRoot + "getAllMetadata");
+    Map<String, dynamic> queryMap = jsonDecode(response.body);
+
+    return queryMap;
+  }
+
   static Future<NotifierState> initializeDataset() async {
     var response = await post(urlRoot + "initialize");
     return NotifierState.SUCCESS;
@@ -96,6 +103,13 @@ class SeriesRepository {
   static Future<NotifierState> setCategoricalAlphas(List<double> alphas) async {
     var response = await post(urlRoot + "setCategoricalAlphas",
         body: {'alphas': jsonEncode(alphas)});
+    return NotifierState.SUCCESS;
+  }
+
+  static Future<NotifierState> removeVariables(
+      List<String> variablesNames) async {
+    var response = await post(urlRoot + "removeVariables",
+        body: {'names': jsonEncode(variablesNames)});
     return NotifierState.SUCCESS;
   }
 }

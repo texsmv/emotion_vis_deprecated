@@ -103,6 +103,7 @@ class _ProjectionPlotState extends State<ProjectionPlot>
         ),
         Expanded(
           child: Listener(
+            behavior: HitTestBehavior.translucent,
             onPointerUp: controller.pointerUpEvent,
             onPointerDown: controller.pointerDownEvent,
             child: MouseRegion(

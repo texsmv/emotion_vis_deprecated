@@ -1,83 +1,110 @@
 import 'package:emotion_vis/controllers/dimension_reduction_controller.dart';
 import 'package:emotion_vis/controllers/projection_controller.dart';
 import 'package:emotion_vis/controllers/series_controller.dart';
-import 'package:emotion_vis/controllers/visualization_controller.dart';
 import 'package:emotion_vis/models/emotions_models.dart';
 import 'package:emotion_vis/models/person_model.dart';
 import 'package:emotion_vis/models/time_unit.dart';
 import 'package:emotion_vis/models/visualization_levels.dart';
 import 'package:emotion_vis/repositories/projections_repository.dart';
 import 'package:emotion_vis/time_series/models/MTSerie.dart';
+import 'package:emotion_vis/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 class HomeController extends GetxController {
-  // DimensionReductionController dimensionReductionController = Get.find();
   SeriesController _seriesController = Get.find();
   ProjectionController _projectionController = Get.find();
-  List<PersonModel> get clusteredPersons => _seriesController.clusteredPersons;
+
+  List<PersonModel> get blueCluster => _seriesController.blueCluster;
+  List<PersonModel> get redCluster => _seriesController.redCluster;
+
   List<String> get variablesNames => List.generate(
       _seriesController.dimensions.length,
       (index) => _seriesController.dimensions[index].name);
 
+  List<String> get variablesOrdered =>
+      _projectionController.variablesNamesOrdered ?? variablesNames;
+
   EmotionModelType get emotionModelType => _seriesController.modelType;
 
   DiscreteTemporalVisualization get discreteTemporalVisualization =>
-      _seriesController.discreteTemporalVisualization.value;
+      _seriesController.discreteTemporalVisualization;
+
   DimensionalTemporalVisualization get dimensionalTemporalVisualization =>
-      _seriesController.dimensionalTemporalVisualization.value;
+      _seriesController.dimensionalTemporalVisualization;
 
   DiscreteInstantVisualization get discreteInstantVisualization =>
-      _seriesController.discreteInstantVisualization.value;
+      _seriesController.discreteInstantVisualization;
   DimensionalInstantVisualization get dimensionalInstantVisualization =>
-      _seriesController.dimensionalInstantVisualization.value;
+      _seriesController.dimensionalInstantVisualization;
 
   PersonModel get queriedPersonData => _seriesController.selectedPerson;
-
-  // MTPoint get queriedPersonPointData => visualizationSettings.personMTPoint;
-
   List<PersonModel> get queriedPersonsData => _seriesController.persons;
 
   RxBool showReducedView = false.obs;
 
-  // List<PersonDataPoint> get personDataPoints =>
-  //     dimensionReductionController.personDataPoints;
+  // List<String> get temporalVisualizationNames {
+  //   if (emotionModelType == EmotionModelType.DIMENSIONAL) {
+  //     return List.generate(
+  //         DimensionalTemporalVisualization.values.length,
+  //         (index) => Utils.dimTempVis2Str(
+  //             DimensionalTemporalVisualization.values[index]));
+  //   } else {
+  //     return List.generate(
+  //         DiscreteTemporalVisualization.values.length,
+  //         (index) => Utils.discTempVis2Str(
+  //             DiscreteTemporalVisualization.values[index]));
+  //   }
+  // }
+
+  // List<String> get instantVisualizationNames {
+  //   if (emotionModelType == EmotionModelType.DIMENSIONAL) {
+  //     return List.generate(
+  //         DimensionalInstantVisualization.values.length,
+  //         (index) => Utils.dimInstVis2Str(
+  //             DimensionalInstantVisualization.values[index]));
+  //   } else {
+  //     return List.generate(
+  //         DiscreteInstantVisualization.values.length,
+  //         (index) => Utils.discInstVis2Str(
+  //             DiscreteInstantVisualization.values[index]));
+  //   }
+  // }
+
+  String currTemporalVisualization() {
+    if (emotionModelType == EmotionModelType.DIMENSIONAL) {
+      return Utils.dimTempVis2Str(dimensionalTemporalVisualization);
+    } else {
+      return Utils.discTempVis2Str(discreteTemporalVisualization);
+    }
+  }
+
+  String currInstantVisualization() {
+    if (emotionModelType == EmotionModelType.DIMENSIONAL) {
+      return Utils.dimInstVis2Str(dimensionalInstantVisualization);
+    } else {
+      return Utils.discInstVis2Str(discreteInstantVisualization);
+    }
+  }
+
+  void chooseTemporalVisualization(String visualizationStr) {}
+
+  @override
+  void onInit() {
+    super.onInit();
+  }
 
   void calculateMds() async {
-    // dimensionReductionController.calculate_D();
     await _seriesController.setEmotionAlphas(
       List.generate(_seriesController.dimensions.length,
           (index) => _seriesController.dimensions[index].alpha),
     );
-    await _seriesController.setNumericalAlphas(
-      List.generate(_seriesController.numericalFeatures.length,
-          (index) => _seriesController.numericalFeatures[index].alpha),
-    );
-    await _seriesController.setCategoricalAlphas(
-      List.generate(_seriesController.categoricalFeatures.length,
-          (index) => _seriesController.categoricalFeatures[index].alpha),
-    );
     _projectionController.calculateMdsCoordinates();
   }
 
-  @override
-  void onInit() {
-    print("Starting");
-    // _seriesController.loadValuesInRange(0, _seriesController.windowSize);
-    print(_seriesController.lowerBound);
-    print(_seriesController.upperBound);
-
-    // visualizationSettings.initializeSelectedPerson();
-    // visualizationSettings.nextWindow();
-    print("Finished");
-    super.onInit();
+  void orderSeriesByRank() {
+    _projectionController.orderSeriesByRank(blueCluster, redCluster);
   }
-
-  void nextWindow() {
-    // visualizationSettings.nextWindow();
-  }
-
-  // * Visualization settings
 
   int get windowSize => _seriesController.windowSize;
 
@@ -111,6 +138,5 @@ class HomeController extends GetxController {
   }
 
   // ------------ Reproduce loop stuff -----------------------
-
   AnimationController reproduceController;
 }

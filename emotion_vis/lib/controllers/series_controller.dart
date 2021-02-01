@@ -5,10 +5,12 @@ import 'package:emotion_vis/models/emotion_dimension.dart';
 import 'package:emotion_vis/models/emotions_models.dart';
 import 'package:emotion_vis/models/person_model.dart';
 import 'package:emotion_vis/models/visualization_levels.dart';
+import 'package:emotion_vis/repositories/projections_repository.dart';
 import 'package:emotion_vis/repositories/series_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:random_color/random_color.dart';
+import 'package:tuple/tuple.dart';
 
 class SeriesController extends GetxController {
   double lowerBound;
@@ -25,16 +27,21 @@ class SeriesController extends GetxController {
   int _windowPosition = 0;
   int _instanceLength = 0;
   int _temporalLength = 0;
-  int _emotionDimensionLength = 0;
 
   int get instanceLength => _instanceLength;
   int get temporalLength => _temporalLength;
-  int get emotionDimensionLength => _emotionDimensionLength;
+  int get emotionDimensionLength => dimensions.length;
 
   int get windowSize => _windowSize;
   int get windowStep => _windowStep;
 
-  PersonModel selectedPerson;
+  PersonModel _selectedPerson;
+  PersonModel get selectedPerson => _selectedPerson;
+  set selectedPerson(PersonModel personModel) {
+    _selectedPerson = personModel;
+    update();
+  }
+
   List<PersonModel> get persons => _persons;
 
   List<PersonModel> blueCluster = [];
@@ -57,6 +64,7 @@ class SeriesController extends GetxController {
       if (dimensions[i].dimensionalDimension == DimensionalDimension.VALENCE)
         return dimensions[i].color;
     }
+    return Colors.black;
   }
 
   Color get dominanceColor {
@@ -64,6 +72,7 @@ class SeriesController extends GetxController {
       if (dimensions[i].dimensionalDimension == DimensionalDimension.DOMINANCE)
         return dimensions[i].color;
     }
+    return Colors.black;
   }
 
   Color get arousalColor {
@@ -71,19 +80,52 @@ class SeriesController extends GetxController {
       if (dimensions[i].dimensionalDimension == DimensionalDimension.AROUSAL)
         return dimensions[i].color;
     }
+    return Colors.black;
   }
 
   /// Temporal visualization choosed for emotion model type
-  Rx<DiscreteTemporalVisualization> discreteTemporalVisualization =
-      DiscreteTemporalVisualization.values[0].obs;
-  Rx<DimensionalTemporalVisualization> dimensionalTemporalVisualization =
-      DimensionalTemporalVisualization.values[0].obs;
+  DiscreteTemporalVisualization _discreteTemporalVisualization =
+      DiscreteTemporalVisualization.values[0];
+  DimensionalTemporalVisualization _dimensionalTemporalVisualization =
+      DimensionalTemporalVisualization.values[0];
+
+  DiscreteTemporalVisualization get discreteTemporalVisualization =>
+      _discreteTemporalVisualization;
+
+  set discreteTemporalVisualization(DiscreteTemporalVisualization value) {
+    _discreteTemporalVisualization = value;
+    update();
+  }
+
+  DimensionalTemporalVisualization get dimensionalTemporalVisualization =>
+      _dimensionalTemporalVisualization;
+
+  set dimensionalTemporalVisualization(DimensionalTemporalVisualization value) {
+    _dimensionalTemporalVisualization = value;
+    update();
+  }
 
   /// Instant visualization choosed for emotion model type
-  Rx<DiscreteInstantVisualization> discreteInstantVisualization =
-      DiscreteInstantVisualization.values[0].obs;
-  Rx<DimensionalInstantVisualization> dimensionalInstantVisualization =
-      DimensionalInstantVisualization.values[0].obs;
+  DiscreteInstantVisualization _discreteInstantVisualization =
+      DiscreteInstantVisualization.values[0];
+  DimensionalInstantVisualization _dimensionalInstantVisualization =
+      DimensionalInstantVisualization.values[0];
+
+  DimensionalInstantVisualization get dimensionalInstantVisualization =>
+      _dimensionalInstantVisualization;
+
+  set dimensionalInstantVisualization(DimensionalInstantVisualization value) {
+    _dimensionalInstantVisualization = value;
+    update();
+  }
+
+  DiscreteInstantVisualization get discreteInstantVisualization =>
+      _discreteInstantVisualization;
+
+  set discreteInstantVisualization(DiscreteInstantVisualization value) {
+    _discreteInstantVisualization = value;
+    update();
+  }
 
   EmotionModelType _modelType = EmotionModelType.DISCRETE;
   EmotionModelType get modelType => _modelType;
@@ -96,10 +138,26 @@ class SeriesController extends GetxController {
     _persons = [];
     Map<String, dynamic> queryMap =
         await SeriesRepository.getAllValuesInRange(begin, end);
+    Map<String, dynamic> metadataMap = await SeriesRepository.getAllMetadata();
     List<String> ids = queryMap.keys.toList();
     for (int i = 0; i < ids.length; i++) {
       Map dimensions = queryMap[ids[i]];
-      _persons.add(PersonModel.fromMap(map: dimensions, id: ids[i]));
+      print("Start!!");
+      PersonModel personModel =
+          PersonModel.fromMap(map: dimensions, id: ids[i]);
+      personModel.metadata = metadataMap[ids[i]]['metadata'];
+      personModel.categoricalValues =
+          metadataMap[ids[i]]['catFeatures'].cast<String>();
+      personModel.categoricalLabels =
+          metadataMap[ids[i]]['catLabels'].cast<String>();
+      print(personModel.categoricalLabels);
+      print("Almonst!!");
+      personModel.numericalValues =
+          metadataMap[ids[i]]['numFeatures'].cast<double>();
+      personModel.numericalLabels =
+          metadataMap[ids[i]]['numLabels'].cast<String>();
+      print("DONE!!");
+      _persons.add(personModel);
     }
     update();
     return NotifierState.SUCCESS;
@@ -147,7 +205,6 @@ class SeriesController extends GetxController {
   Future<NotifierState> initLengths() async {
     _instanceLength = await SeriesRepository.getInstanceLength();
     _temporalLength = await SeriesRepository.getTimeLength();
-    _emotionDimensionLength = dimensions.length;
 
     update();
     return NotifierState.SUCCESS;
@@ -156,11 +213,18 @@ class SeriesController extends GetxController {
   Future<NotifierState> initDimensions() async {
     List<String> dimensionsNames = await SeriesRepository.getDimensionsLabels();
     dimensions = List.generate(
-        dimensionsNames.length,
-        (index) => EmotionDimension(
-            name: dimensionsNames[index],
-            color: RandomColor().randomColor(),
-            dimensionalDimension: DimensionalDimension.NONE));
+      dimensionsNames.length,
+      (index) => EmotionDimension(
+          name: dimensionsNames[index],
+          color: RandomColor().randomColor(),
+          dimensionalDimension: DimensionalDimension.NONE),
+    );
+    if (modelType == EmotionModelType.DIMENSIONAL) {
+      for (var i = 0; i < dimensions.length; i++) {
+        dimensions[i].remove = true;
+      }
+    }
+    _windowSize = temporalLength;
     update();
     return NotifierState.SUCCESS;
   }
@@ -199,23 +263,16 @@ class SeriesController extends GetxController {
     return state;
   }
 
-  Future<NotifierState> setCategoricalAlphas(List<double> alphas) async {
-    assert(categoricalFeatures.length == alphas.length);
-    NotifierState state = await SeriesRepository.setCategoricalAlphas(alphas);
-    for (var i = 0; i < categoricalFeatures.length; i++) {
-      categoricalFeatures[i].alpha = alphas[i];
+  Future<NotifierState> removeMarkedVariables() async {
+    List<String> names = [];
+    for (var i = 0; i < dimensions.length; i++) {
+      if (dimensions[i].remove) names.add(dimensions[i].name);
     }
-    update();
-    return state;
-  }
-
-  Future<NotifierState> setNumericalAlphas(List<double> alphas) async {
-    assert(numericalFeatures.length == alphas.length);
-    NotifierState state = await SeriesRepository.setNumericalAlphas(alphas);
-    for (var i = 0; i < numericalFeatures.length; i++) {
-      numericalFeatures[i].alpha = alphas[i];
+    for (var i = 0; i < names.length; i++) {
+      dimensions.removeWhere((dimension) => dimension.name == names[i]);
     }
+    await SeriesRepository.removeVariables(names);
     update();
-    return state;
+    return NotifierState.SUCCESS;
   }
 }

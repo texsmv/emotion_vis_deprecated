@@ -1,18 +1,28 @@
 import 'package:emotion_vis/models/person_model.dart';
-import 'package:emotion_vis/time_series/models/MTSerie.dart';
 import 'package:flutter/material.dart';
 
+import '../../vis_settings.dart';
 import 'dimensional_scatterplot_painter.dart';
 
 class DimensionalScatterplot extends StatelessWidget {
-  final PersonModel personModel;
-  const DimensionalScatterplot({Key key, @required this.personModel})
-      : super(key: key);
+  PersonModel personModel;
+  VisSettings visSettings;
+  int timePoint;
+  DimensionalScatterplot({
+    Key key,
+    @required this.personModel,
+    @required this.visSettings,
+    @required this.timePoint,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
-      painter: DimensionalScatterplotPainter(personModel: personModel),
+      painter: DimensionalScatterplotPainter(
+        personModel: personModel,
+        visSettings: visSettings,
+        timePoint: timePoint,
+      ),
     );
   }
 }

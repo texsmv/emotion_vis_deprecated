@@ -28,29 +28,30 @@ class PreprocessingView extends GetView<InitialSettingsController> {
                     Obx(
                       () => MenuButton(
                         child: Container(
-                            width: 120,
-                            height: 30,
-                            color: Get.theme.primaryColor,
-                            alignment: Alignment.center,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(
-                              timeUnit2Str(controller.timeUnit.value),
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w400),
-                            )),
+                          width: 120,
+                          height: 30,
+                          color: Get.theme.primaryColor,
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            timeUnit2Str(controller.timeUnit.value),
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w400),
+                          ),
+                        ),
                         items: TimeUnit.values,
                         topDivider: true,
                         scrollPhysics: AlwaysScrollableScrollPhysics(),
                         onItemSelected: controller.onTimeUnitChanged,
                         onMenuButtonToggle: (isToggle) {},
                         decoration: BoxDecoration(
-                            border:
-                                Border.all(color: Colors.white.withAlpha(0)),
-                            borderRadius:
-                                const BorderRadius.all(Radius.circular(3.0)),
-                            color: Colors.white.withAlpha(0)),
+                          border: Border.all(color: Colors.white.withAlpha(0)),
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(3.0)),
+                          color: Colors.white.withAlpha(0),
+                        ),
                         divider: Container(
                           height: 1,
                           color: Colors.grey,

@@ -1,13 +1,19 @@
-import 'package:emotion_vis/time_series/models/MTSerie.dart';
 import 'package:get/get.dart';
+import 'dart:convert';
+
+import 'MTSerie.dart';
+import 'TSerie.dart';
 
 class PersonModel {
   String id;
   MTSerie mtSerie;
-
-  Map<String, List<double>> values;
   double x;
   double y;
+  Map<String, dynamic> metadata;
+  List<String> numericalLabels;
+  List<double> numericalValues;
+  List<String> categoricalLabels;
+  List<String> categoricalValues;
 
   RxInt _clusterId = RxInt();
   int get clusterId => _clusterId.value;
@@ -15,15 +21,14 @@ class PersonModel {
 
   PersonModel({this.id, this.mtSerie});
 
-  PersonModel.fromMap({Map map, String id}) {
+  PersonModel.fromMap({Map<String, dynamic> map, String id}) {
     this.id = id;
-    this.values = {};
+    Map<String, TSerie> values = {};
     List<String> dimensions = map.keys.toList();
     for (int i = 0; i < dimensions.length; i++) {
-      values[dimensions[i]] = List<double>.from(map[dimensions[i]]);
+      List<double> doubleList = map[dimensions[i]].cast<double>();
+      values[dimensions[i]] = TSerie(values: doubleList);
     }
+    mtSerie = MTSerie(timeSeries: values);
   }
-
-  int get temporalLength => values.values.toList()[0].length;
-  int get dimensionsLength => values.keys.toList().length;
 }

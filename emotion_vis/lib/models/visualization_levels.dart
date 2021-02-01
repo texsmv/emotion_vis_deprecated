@@ -1,5 +1,6 @@
 enum DiscreteTemporalVisualization {
   LINEAR,
+  STACK_CHART,
 }
 
 enum DiscreteInstantVisualization {
@@ -8,10 +9,9 @@ enum DiscreteInstantVisualization {
 
 enum DimensionalTemporalVisualization {
   GLYPH,
-  NONE,
+  STACK_CHART,
 }
 
 enum DimensionalInstantVisualization {
   DimensionalScatterplot,
-  NONE,
 }

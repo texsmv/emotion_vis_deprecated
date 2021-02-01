@@ -2,7 +2,6 @@ import 'package:device_preview/device_preview.dart';
 import 'package:emotion_vis/controllers/dimension_reduction_controller.dart';
 import 'package:emotion_vis/controllers/projection_controller.dart';
 import 'package:emotion_vis/controllers/series_controller.dart';
-import 'package:emotion_vis/controllers/visualization_controller.dart';
 import 'package:emotion_vis/modules/visualization_settings/visualizationSettingsIndex.dart';
 import 'package:emotion_vis/routes/route_names.dart';
 import 'package:emotion_vis/routes/project_router.dart';

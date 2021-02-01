@@ -111,6 +111,12 @@ class ProjectionPlotPainter extends CustomPainter {
         Offset(x, y),
         4,
         paint,
+        onLongPressStart: (details) {
+          if (onTap != null) {
+            onTap[i]();
+          }
+        },
+        hitTestBehavior: HitTestBehavior.opaque,
         onTapDown: (details) {
           if (onTap != null) {
             onTap[i]();

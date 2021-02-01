@@ -7,7 +7,7 @@ class SectionContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-        color: Color.fromARGB(255, 235, 235, 235),
+        color: Color.fromARGB(255, 245, 245, 245),
         elevation: 4,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),

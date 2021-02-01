@@ -19,6 +19,8 @@ class _EmotionDimensionTileState extends State<EmotionDimensionTile> {
 
   @override
   Widget build(BuildContext context) {
+    EmotionDimension emotionDimension =
+        seriesController.dimensions[widget.emotionDimensionIndex];
     return GetBuilder<SeriesController>(
       builder: (_) => Container(
         height: 60,
@@ -26,21 +28,22 @@ class _EmotionDimensionTileState extends State<EmotionDimensionTile> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Container(
-              width: 200,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                children: [
-                  Text(
-                    "Dimension name:",
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                  SizedBox(
-                    width: 10,
-                  ),
-                  Text(seriesController
-                      .dimensions[widget.emotionDimensionIndex].name),
-                ],
+            Expanded(
+              child: Container(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Dimension name:",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    SizedBox(
+                      width: 10,
+                    ),
+                    Text(seriesController
+                        .dimensions[widget.emotionDimensionIndex].name),
+                  ],
+                ),
               ),
             ),
             Container(
@@ -97,9 +100,36 @@ class _EmotionDimensionTileState extends State<EmotionDimensionTile> {
                       onPressed: () async {
                         await pickDimensionalDimension(
                             widget.emotionDimensionIndex);
-                        setState(() {});
+                        setState(() {
+                          if (emotionDimension.dimensionalDimension !=
+                              DimensionalDimension.NONE)
+                            emotionDimension.remove = false;
+                        });
                       },
                     ),
+                  ],
+                ),
+              ),
+            ),
+            Visibility(
+              visible: seriesController.modelType == EmotionModelType.DISCRETE,
+              child: Container(
+                width: 110,
+                child: Row(
+                  children: [
+                    SizedBox(width: 10),
+                    Text(
+                      "Keep:",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                    Obx(
+                      () => Switch(
+                        value: !emotionDimension.remove,
+                        onChanged: (value) {
+                          emotionDimension.remove = !value;
+                        },
+                      ),
+                    )
                   ],
                 ),
               ),

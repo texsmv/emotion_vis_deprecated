@@ -3,9 +3,54 @@ import 'dart:math';
 import 'package:emotion_vis/controllers/series_controller.dart';
 import 'package:emotion_vis/models/emotion_dimension.dart';
 import 'package:emotion_vis/models/time_unit.dart';
+import 'package:emotion_vis/models/visualization_levels.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:get/get.dart';
+
+class Utils {
+  static String discTempVis2Str(DiscreteTemporalVisualization visualization) {
+    switch (visualization) {
+      case DiscreteTemporalVisualization.LINEAR:
+        return "Linear";
+      case DiscreteTemporalVisualization.STACK_CHART:
+        return "Stack chart";
+        break;
+      default:
+    }
+  }
+
+  static String discInstVis2Str(DiscreteInstantVisualization visualization) {
+    switch (visualization) {
+      case DiscreteInstantVisualization.RADAR:
+        return "Radar";
+
+        break;
+      default:
+    }
+  }
+
+  static String dimInstVis2Str(DimensionalInstantVisualization visualization) {
+    switch (visualization) {
+      case DimensionalInstantVisualization.DimensionalScatterplot:
+        return "Scatterplot";
+
+        break;
+      default:
+    }
+  }
+
+  static String dimTempVis2Str(DimensionalTemporalVisualization visualization) {
+    switch (visualization) {
+      case DimensionalTemporalVisualization.GLYPH:
+        return "Glyph";
+      case DimensionalTemporalVisualization.STACK_CHART:
+        return "Stack chart";
+        break;
+      default:
+    }
+  }
+}
 
 Offset polarToCartesian(double angle, double r) {
   return Offset(r * cos(angle), r * sin(angle));

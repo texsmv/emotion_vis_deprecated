@@ -12,11 +12,13 @@ import 'package:touchable/touchable.dart';
 
 class ClusterLinearChartPainter extends CustomPainter {
   String variableName;
-  List<PersonModel> personModels;
+  List<PersonModel> blueCluster;
+  List<PersonModel> redCluster;
   BuildContext context;
 
   ClusterLinearChartPainter({
-    @required this.personModels,
+    @required this.blueCluster,
+    @required this.redCluster,
     @required this.variableName,
     @required this.context,
   });
@@ -121,14 +123,26 @@ class ClusterLinearChartPainter extends CustomPainter {
     canvas.translate(_rightOffset, _topOffset);
 
     drawCanvasInfo(canvas);
-    for (var k = 0; k < personModels.length; k++) {
+    for (var k = 0; k < blueCluster.length; k++) {
       for (int i = 0; i < _seriesController.windowSize - 1; i++) {
         canvas.drawLine(
           Offset(i * _dateHorizontalSpace,
-              emotionValue2Heigh(personModels[k].values[emotion][i])),
+              emotionValue2Heigh(blueCluster[k].mtSerie.at(i, emotion))),
           Offset((i + 1) * _dateHorizontalSpace,
-              emotionValue2Heigh(personModels[k].values[emotion][i + 1])),
-          personModels[k].clusterId == 0 ? bluePaint : redPaint,
+              emotionValue2Heigh(blueCluster[k].mtSerie.at(i + 1, emotion))),
+          bluePaint,
+        );
+      }
+    }
+
+    for (var k = 0; k < redCluster.length; k++) {
+      for (int i = 0; i < _seriesController.windowSize - 1; i++) {
+        canvas.drawLine(
+          Offset(i * _dateHorizontalSpace,
+              emotionValue2Heigh(redCluster[k].mtSerie.at(i, emotion))),
+          Offset((i + 1) * _dateHorizontalSpace,
+              emotionValue2Heigh(redCluster[k].mtSerie.at(i + 1, emotion))),
+          redPaint,
         );
       }
     }

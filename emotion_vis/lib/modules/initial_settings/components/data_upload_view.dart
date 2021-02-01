@@ -60,7 +60,6 @@ class DataUploadView extends GetView<InitialSettingsController> {
                 AppButton(
                     onPressed: () {
                       controller.pickEmotionFiles(0);
-                      // compute(controller.pickEmotionFiles, 1);
                     },
                     text: "select")
               ],

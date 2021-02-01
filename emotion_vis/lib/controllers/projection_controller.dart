@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 
 class ProjectionController extends GetxController {
   SeriesController _seriesController = Get.find();
+  List<String> variablesNamesOrdered;
 
   bool projectionLoaded = false;
 
@@ -24,5 +25,19 @@ class ProjectionController extends GetxController {
     update();
 
     print(coordsMap);
+  }
+
+  Future<NotifierState> orderSeriesByRank(
+      List<PersonModel> blueCluster, List<PersonModel> redCluster) async {
+    if (blueCluster.length == 0 || redCluster.length == 0)
+      return NotifierState.ERROR;
+
+    variablesNamesOrdered =
+        await ProjectionsRepository.getSubsetsDimensionsRankings(
+      List.generate(blueCluster.length, (index) => blueCluster[index].id),
+      List.generate(redCluster.length, (index) => redCluster[index].id),
+    );
+    update();
+    return NotifierState.SUCCESS;
   }
 }

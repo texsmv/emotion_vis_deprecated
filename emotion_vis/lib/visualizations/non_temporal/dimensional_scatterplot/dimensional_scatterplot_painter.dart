@@ -1,17 +1,20 @@
 import 'dart:math';
 
-import 'package:emotion_vis/controllers/series_controller.dart';
-import 'package:emotion_vis/models/emotion_dimension.dart';
 import 'package:emotion_vis/models/person_model.dart';
-import 'package:emotion_vis/time_series/models/MTSerie.dart';
-import 'package:emotion_vis/utils/utils.dart';
-import 'package:emotion_vis/visualizations/non_temporal/radar/radar_painter.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../vis_settings.dart';
+import '../../vis_utils.dart';
+
 class DimensionalScatterplotPainter extends CustomPainter {
-  final PersonModel personModel;
-  DimensionalScatterplotPainter({@required this.personModel}) {
+  PersonModel personModel;
+  VisSettings visSettings;
+  int timePoint;
+  DimensionalScatterplotPainter(
+      {@required this.personModel,
+      this.timePoint,
+      @required this.visSettings}) {
     axisPaint = Paint()
       ..color = Colors.black
       ..style = PaintingStyle.stroke
@@ -19,14 +22,14 @@ class DimensionalScatterplotPainter extends CustomPainter {
       ..strokeWidth = 2;
   }
 
-  SeriesController _seriesController = Get.find();
-
   Offset center;
   double width;
   double height;
   double radius;
 
   Paint axisPaint;
+
+  int get varLength => visSettings.variablesNames.length;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -41,47 +44,46 @@ class DimensionalScatterplotPainter extends CustomPainter {
 
   void drawPoint(Canvas canvas) {
     double valenceValue;
-    double dominanceValue;
     double arousalValue;
-    for (var i = 0; i < _seriesController.dimensions.length; i++) {
-      EmotionDimension emotionDimension =
-          emotionDimensionByname(_seriesController.dimensions[i].name);
-      switch (emotionDimension.dimensionalDimension) {
-        case DimensionalDimension.AROUSAL:
-          arousalValue = personModel.values[i].last;
+    double dominanceValue;
+    for (var i = 0; i < varLength; i++) {
+      switch (i) {
+        case 0:
+          arousalValue =
+              personModel.mtSerie.at(timePoint, visSettings.variablesNames[i]);
           break;
-        case DimensionalDimension.VALENCE:
-          valenceValue = personModel.values[i].last;
+        case 1:
+          valenceValue =
+              personModel.mtSerie.at(timePoint, visSettings.variablesNames[i]);
           break;
-        case DimensionalDimension.DOMINANCE:
-          dominanceValue = personModel.values[i].last;
+        case 2:
+          dominanceValue =
+              personModel.mtSerie.at(timePoint, visSettings.variablesNames[i]);
           break;
 
-          break;
         default:
+          break;
       }
     }
 
-    double valenceCanvasValue = rangeConverter(
-        valenceValue,
-        _seriesController.lowerBound,
-        _seriesController.upperBound,
-        -radius,
-        radius);
-    double arousalCanvasValue = rangeConverter(
-        arousalValue,
-        _seriesController.lowerBound,
-        _seriesController.upperBound,
-        -radius,
-        radius);
+    double valenceCanvasValue = VisUtils.toNewRange(valenceValue,
+        visSettings.lowerLimit, visSettings.upperLimit, -radius, radius);
+    double arousalCanvasValue = VisUtils.toNewRange(arousalValue,
+        visSettings.lowerLimit, visSettings.upperLimit, -radius, radius);
 
-    double dominanceRadiusValue = rangeConverter(dominanceValue,
-        _seriesController.lowerBound, _seriesController.upperBound, 2, 10);
+    double dominanceRadiusValue;
+    if (varLength == 3)
+      dominanceRadiusValue = VisUtils.toNewRange(dominanceValue,
+          visSettings.lowerLimit, visSettings.upperLimit, 2, 10);
 
     canvas.save();
     canvas.translate(center.dx, center.dy);
-    canvas.drawCircle(Offset(valenceCanvasValue, arousalCanvasValue),
-        dominanceRadiusValue, axisPaint);
+    if (varLength == 3)
+      canvas.drawCircle(Offset(valenceCanvasValue, arousalCanvasValue),
+          dominanceRadiusValue, axisPaint);
+    else
+      canvas.drawCircle(
+          Offset(valenceCanvasValue, arousalCanvasValue), 4, axisPaint);
     canvas.restore();
   }
 

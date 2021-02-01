@@ -1,13 +1,21 @@
 import 'package:emotion_vis/models/person_model.dart';
-import 'package:emotion_vis/time_series/models/MTSerie.dart';
-import 'package:emotion_vis/visualizations/single_temporal/linear_chart/linear_chart_painter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:touchable/touchable.dart';
 
+import '../../vis_settings.dart';
+import 'linear_chart_painter.dart';
+
 class TemporalLinearChart extends StatefulWidget {
   PersonModel personModel;
-  TemporalLinearChart({Key key, @required this.personModel}) : super(key: key);
+  VisSettings visSettings;
+  int segmentsNumber;
+  TemporalLinearChart({
+    Key key,
+    @required this.personModel,
+    @required this.visSettings,
+    this.segmentsNumber = 10,
+  }) : super(key: key);
 
   @override
   _TemporalLinearChartState createState() => _TemporalLinearChartState();
@@ -17,9 +25,13 @@ class _TemporalLinearChartState extends State<TemporalLinearChart> {
   @override
   Widget build(BuildContext context) {
     return CanvasTouchDetector(
-      builder: (context) => CustomPaint(
+      builder: (touchyContext) => CustomPaint(
         painter: LinearChartPainter(
-            context: context, personModel: widget.personModel),
+          context: touchyContext,
+          personModel: widget.personModel,
+          visSettings: widget.visSettings,
+          segmentsNumber: widget.segmentsNumber,
+        ),
       ),
     );
   }
