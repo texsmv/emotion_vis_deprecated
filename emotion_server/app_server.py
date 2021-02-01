@@ -1,7 +1,7 @@
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from utils.time_series_utils import time_serie_from_eml_string
-from models.time_series_dataset import TimeSeriesDataset
+from utils.utils import time_serie_from_eml_string
+from mts.classes.time_series_dataset import TimeSeriesDataset
 from models.emotion_dataset_controller import EmotionDatasetController
 import json
 import numpy as np
@@ -64,6 +64,10 @@ def getValuesInRange():
   end = int(request.form.get('end'))
   return dataController.queryAllInRange(begin, end)
 
+@app.route("/getAllMetadata", methods=['POST'])
+def getAllMetadata():
+  return jsonify(dataController.dataset.getAllMetadata())
+
 @app.route("/getNumericalLabels", methods=['POST'])
 def getNumericalLabels():
   print(dataController.getNumericalLabels())
@@ -78,6 +82,14 @@ def getCategoricalLabels():
 @app.route("/getMDS", methods=['POST'])
 def getMDS():
   return dataController.mdsProjection()
+
+@app.route("/getSubsetsDimensionsRankings", methods=['POST'])
+def getSubsetsDimensionsRankings():
+  blueCluster = json.loads(request.form.get('blueCluster'))
+  redCluster = json.loads(request.form.get('redCluster'))
+  print(dataController.getSubsetsDimensionsRankings(blueCluster, redCluster))
+  print(jsonify(dataController.getSubsetsDimensionsRankings(blueCluster, redCluster)))
+  return jsonify(dataController.getSubsetsDimensionsRankings(blueCluster, redCluster))
 
 @app.route("/setEmotionAlphas", methods=['POST'])
 def setEmotionAlphas():
@@ -95,6 +107,12 @@ def setCategoricalAlphas():
 def setNumericalAlphas():
   alphas = json.loads(request.form.get('alphas'))
   dataController.numericalAlphas = np.array(alphas)
+  return "success"
+
+@app.route("/removeVariables", methods=['POST'])
+def removeVariables():
+  names = json.loads(request.form.get('names'))
+  dataController.removeVariables(names)
   return "success"
 
 

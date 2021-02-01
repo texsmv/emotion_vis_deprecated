@@ -4,10 +4,11 @@ import json
 
 sys.path.append("..")
 
-from .time_series_dataset import TimeSeriesDataset
-from utils.time_series_utils import time_serie_from_eml_string, distance_matrix
-from utils.time_series_utils import mtserieQueryToJsonStr
-from dimensionality_reduction.mds import mts_mds
+from mts.classes.time_series_dataset import TimeSeriesDataset
+from utils.utils import time_serie_from_eml_string
+from mts.utils.time_series_utils import distance_matrix
+from mts.utils.time_series_utils import mtserieQueryToJsonStr, subsetSeparationRanking
+from mts.projection.mds import mts_mds
 
 class EmotionDatasetController:
     def __init__(self):
@@ -16,9 +17,8 @@ class EmotionDatasetController:
         self.minValue = None
         self.maxValue = None
         self.alphas = None
-        self.numericalAlphas = None
-        self.categoricalAlphas = None
         self.oldCoords = None
+        self.D_k = None
         super().__init__()
         
     def addEml(self, eml, isCategorical = True):
@@ -32,8 +32,6 @@ class EmotionDatasetController:
         if self.alphas is None:
             self.alphas = np.ones(self.getVariablesNames())
         
-        if self.categoricalAlphas is None:
-            self.categoricalAlphas = np.ones(self.getVariablesNames())
         
         id = mtserie.metadata["id"]
         self.dataset.add(mtserie, id)
@@ -41,6 +39,11 @@ class EmotionDatasetController:
         
     def getIds(self):
         return self.dataset.ids()
+    
+    def removeVariables(self, names):
+        for name in names:
+            self.dataset.removeVariable(name)
+        
     
     def calculateValuesBounds(self):
         X = self.dataset.getValues()
@@ -78,15 +81,27 @@ class EmotionDatasetController:
     def queryAllInRange(self, begin, end):
         return mtserieQueryToJsonStr(self.dataset.queryAllByIndex(begin, end, toList=True))
     
+    def getSubsetsDimensionsRankings(self, blueCluster, redCluster):
+        ids = self.getIds()
+        
+        blueIndexes = [ids.index(e) for e in blueCluster]
+        redIndexes = [ids.index(e) for e in redCluster]
+        
+        j_s = subsetSeparationRanking(self.D_k, blueIndexes, redIndexes)
+        print("Js")
+        print(j_s)
+        variablesRanks = {}
+        vnames = self.getVariablesNames()
+        for i in range(len(vnames)):
+            variablesRanks[vnames[i]] = j_s[i]
+        return variablesRanks
+    
     def mdsProjection(self):
         X = self.dataset.getValues()
-        Mnum = self.dataset.getNumericalValues()
-        Mcat = self.dataset.getCategoricalValues()
-
         alphas = self.alphas
-        numAlphas = self.numericalAlphas
 
-        D = distance_matrix(X, alphas, metadata=Mnum, metadataAlphas= numAlphas)
+        D, self.D_k = distance_matrix(X, alphas)
+        self.D_k = np.power(self.D_k, 2)
         
         coords = mts_mds(D)
         

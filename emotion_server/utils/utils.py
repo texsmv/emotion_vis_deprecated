@@ -7,7 +7,7 @@ import json
 
 
 sys.path.append("..")
-from models.time_serie import MultivariateTimeSerie
+from mts.classes.time_serie import MultivariateTimeSerie
 
 def time_serie_from_eml(emotionMLPath, isCategorical = True):
     modelTypeName = ""
@@ -88,6 +88,7 @@ def time_serie_from_eml(emotionMLPath, isCategorical = True):
 
 
 def time_serie_from_eml_string(emotionMLString, isCategorical = True):
+    isAnyDateMissing = False
     modelTypeName = ""
     if isCategorical:
         modelTypeName = "category"
@@ -95,7 +96,6 @@ def time_serie_from_eml_string(emotionMLString, isCategorical = True):
         modelTypeName = "dimensional"
     
     root = ET.fromstring(emotionMLString)
-    # root = tree.getroot() 
     
     dimensions = []
     dimensionsDict = {}
@@ -112,7 +112,7 @@ def time_serie_from_eml_string(emotionMLString, isCategorical = True):
         value = metadata.get("value")
         identifiersMetadata.append(name)
         identifiersMetadataDict[name] = value
-    
+    print(identifiersMetadataDict)
     categoricalMetadata = []
     categoricalMetadataDict = {}
     
@@ -135,19 +135,31 @@ def time_serie_from_eml_string(emotionMLString, isCategorical = True):
     
     
     for emotionItem in root.findall('emotion'):
-        date = datetime.datetime.fromtimestamp(float(emotionItem.get("start"))/1000)
-        for emotionDimention in emotionItem.findall(modelTypeName):
+        dateField = emotionItem.get("start")
+        date = 0
+        if dateField != None:
+            date = datetime.datetime.fromtimestamp(float(emotionItem.get("start"))/1000)
+            isAnyDateMissing = True
+        
+        for emotionDimention in emotionItem.getchildren():
             value = float(emotionDimention.get("value"))
             name = emotionDimention.get("name")
-            dimensionsDict[name] =  dimensionsDict[name] + [(value, date)]
+            if isAnyDateMissing:
+                dimensionsDict[name] =  dimensionsDict[name] + [value]
+            else:
+                dimensionsDict[name] =  dimensionsDict[name] + [(value, date)]
+    
+    dateTimes = 0
+    if not isAnyDateMissing:
+        for name in dimensions:
+            dimensionsDict[name].sort(key=lambda tup: tup[1])
+        dateTimes = np.array(list(map(lambda e: e[1], dimensionsDict[dimensions[0]])))
     
     for name in dimensions:
-        dimensionsDict[name].sort(key=lambda tup: tup[1])
-
-    dateTimes = np.array(list(map(lambda e: e[1], dimensionsDict[dimensions[0]])))
-    
-    for name in dimensions:
-        dimensionsDict[name] = np.array( list(map(lambda e: e[0], dimensionsDict[name])))
+        if not isAnyDateMissing:
+            dimensionsDict[name] = np.array( list(map(lambda e: e[0], dimensionsDict[name])))
+        else:
+            dimensionsDict[name] = np.array(dimensionsDict[name])
     
     numericalFeatures = [(k, v) for k, v in numericalMetadataDict.items()]
     numericalFeatures.sort()
@@ -157,11 +169,11 @@ def time_serie_from_eml_string(emotionMLString, isCategorical = True):
     categoricalFeatures.sort()
     categoricalFeatures = np.array([v for _, v in categoricalFeatures])
     
-    
-    
-    mtserie = MultivariateTimeSerie.fromDict(dimensionsDict, dates=dateTimes, numericalFeatures=numericalFeatures, categoricalFeatures=categoricalFeatures, metadata=identifiersMetadataDict, numericalLabels=numericalMetadata, categoricalLabels=categoricalMetadata)
-
-    
+    mtserie = 0
+    if not isAnyDateMissing:    
+        mtserie =  MultivariateTimeSerie.fromDict(dimensionsDict, dates=dateTimes, numericalFeatures=numericalFeatures, categoricalFeatures=categoricalFeatures, metadata=identifiersMetadataDict, numericalLabels=numericalMetadata, categoricalLabels=categoricalMetadata)
+    else:
+        mtserie =  MultivariateTimeSerie.fromDict(dimensionsDict, numericalFeatures=numericalFeatures, categoricalFeatures=categoricalFeatures, metadata=identifiersMetadataDict, numericalLabels=numericalMetadata, categoricalLabels=categoricalMetadata)
     return mtserie
 
 def distance_matrix(X, alphas, metadata = np.array([]), metadataAlphas = []):
