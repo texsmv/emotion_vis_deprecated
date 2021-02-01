@@ -1,4 +1,5 @@
 *.xml
 *.csv
 *.zip
-*datasets/*
+*/datasets/*
+*/__pycache__/*
