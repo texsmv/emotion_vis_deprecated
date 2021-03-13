@@ -25,7 +25,7 @@ class TemporalMultiView extends GetView<HomeController> {
       return Container(
         width: double.infinity,
         height: double.infinity,
-        child: GetBuilder<ProjectionController>(
+        child: GetBuilder<SeriesController>(
           builder: (projectionController) {
             if (!projectionController.projectionLoaded)
               return Center(
@@ -36,12 +36,17 @@ class TemporalMultiView extends GetView<HomeController> {
               onTap: List.generate(
                 controller.queriedPersonsData.length,
                 (index) => () {
+                  print("HOli boli " + index.toString());
+                  Get.find<SeriesController>().selectedPerson =
+                      controller.queriedPersonsData[index];
                   // Get.find<VisualizationController>().selectedPersonId =
                   //     controller.personDataPoints[index].personModel.id;
                 },
               ),
-              xlim: Offset(-3, 3),
-              ylim: Offset(-3, 3),
+              xlim: Offset(-projectionController.projectionMaxValue * 1.3,
+                  projectionController.projectionMaxValue * 1.3),
+              ylim: Offset(-projectionController.projectionMaxValue * 1.3,
+                  projectionController.projectionMaxValue * 1.3),
               personModels: controller.queriedPersonsData,
             );
           },

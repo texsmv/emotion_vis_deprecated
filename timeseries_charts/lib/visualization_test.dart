@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:random_color/random_color.dart';
 import 'package:timeseries_charts/models/MTSerie.dart';
+import 'package:timeseries_charts/models/TSerie.dart';
 import 'package:timeseries_charts/models/person_model.dart';
 import 'dart:math';
 import 'package:graphic/graphic.dart' as graphic;
+import 'package:timeseries_charts/visualizations/overview/stacked_bar_chart.dart/stacked_bar_chart.dart';
 import 'package:timeseries_charts/visualizations/temporal/linear_chart/linear_chart.dart';
 import 'package:timeseries_charts/visualizations/temporal/stack_chart/stack_chart.dart';
 import 'package:timeseries_charts/visualizations/temporal/temporal_glyph/temporal_glyph.dart';
@@ -17,10 +19,13 @@ class VisualizationTest extends StatefulWidget {
 }
 
 class _VisualizationTestState extends State<VisualizationTest> {
+  MTSerie meanValues;
+  MTSerie maxValues;
+  MTSerie minValues;
   List<PersonModel> persons;
   List<String> timeLabels;
 
-  int timeLength = 10;
+  int timeLength = 200;
   int varLength = 3;
   int instanceLength = 5;
   Map<String, Color> colors;
@@ -60,6 +65,49 @@ class _VisualizationTestState extends State<VisualizationTest> {
       String label = i.toString() + " label";
       timeLabels.add(label);
     }
+    Map<String, TSerie> meansMap = {};
+    for (var i = 0; i < varLength; i++) {
+      List<double> values = List.generate(timeLength, (index) => null);
+      for (var j = 0; j < timeLength; j++) {
+        values[j] = 0;
+        for (var k = 0; k < instanceLength; k++) {
+          values[j] = values[j] + persons[k].mtSerie.at(j, variablesNames[i]);
+        }
+        values[j] = values[j] / instanceLength;
+      }
+      meansMap[variablesNames[i]] = TSerie(values: values);
+      // print(values);
+    }
+    meanValues = MTSerie(timeSeries: meansMap);
+
+    Map<String, TSerie> maxMap = {};
+    for (var i = 0; i < varLength; i++) {
+      List<double> values = List.generate(timeLength, (index) => null);
+      for (var j = 0; j < timeLength; j++) {
+        values[j] = persons[0].mtSerie.at(j, variablesNames[i]);
+        for (var k = 0; k < instanceLength; k++) {
+          if (values[j] < persons[k].mtSerie.at(j, variablesNames[i]))
+            values[j] = persons[k].mtSerie.at(j, variablesNames[i]);
+        }
+      }
+      maxMap[variablesNames[i]] = TSerie(values: values);
+    }
+    maxValues = MTSerie(timeSeries: maxMap);
+
+    Map<String, TSerie> minMap = {};
+    for (var i = 0; i < varLength; i++) {
+      List<double> values = List.generate(timeLength, (index) => null);
+      for (var j = 0; j < timeLength; j++) {
+        values[j] = persons[0].mtSerie.at(j, variablesNames[i]);
+        for (var k = 0; k < instanceLength; k++) {
+          if (values[j] > persons[k].mtSerie.at(j, variablesNames[i]))
+            values[j] = persons[k].mtSerie.at(j, variablesNames[i]);
+        }
+      }
+      minMap[variablesNames[i]] = TSerie(values: values);
+      print(values);
+    }
+    minValues = MTSerie(timeSeries: minMap);
   }
 
   @override
@@ -82,46 +130,66 @@ class _VisualizationTestState extends State<VisualizationTest> {
       body: Container(
         height: double.infinity,
         width: double.infinity,
-        child: ListView.builder(
-          itemBuilder: (_, index) {
-            return Padding(
-              padding: EdgeInsets.symmetric(vertical: 10),
-              child: Container(
-                height: 280,
-                child: TemporalGlyph(
-                  personModel: persons[index],
-                  visSettings: VisSettings(
-                    colors: colors,
-                    lowerLimit: minValue,
-                    upperLimit: maxValue,
-                    variablesNames: variablesNames,
-                    timeLabels: timeLabels,
-                  ),
+        child: Column(
+          children: [
+            Container(
+              height: 300,
+              width: double.infinity,
+              child: StackedBarChart(
+                mtSerie: meanValues,
+                visSettings: VisSettings(
+                  colors: colors,
+                  lowerLimit: 0,
+                  upperLimit: maxValue * varLength,
+                  variablesNames: variablesNames,
+                  timeLabels: timeLabels,
                 ),
-                // child: StackChart(
-                //   personModel: persons[index],
-                //   visSettings: VisSettings(
-                //     colors: colors,
-                //     lowerLimit: minValue,
-                //     upperLimit: maxValue,
-                //     variablesNames: variablesNames,
-                //     timeLabels: timeLabels,
-                //   ),
-                // ),
-                // child: TemporalLinearChart(
-                //   personModel: persons[index],
-                //   visSettings: VisSettings(
-                //     colors: colors,
-                //     lowerLimit: minValue,
-                //     upperLimit: maxValue,
-                //     variablesNames: variablesNames,
-                //     timeLabels: timeLabels,
-                //   ),
-                // ),
               ),
-            );
-          },
-          itemCount: persons.length,
+            ),
+            Expanded(
+              child: ListView.builder(
+                itemBuilder: (_, index) {
+                  return Padding(
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    child: Container(
+                      height: 280,
+                      // child: TemporalGlyph(
+                      //   personModel: persons[index],
+                      //   visSettings: VisSettings(
+                      //     colors: colors,
+                      //     lowerLimit: minValue,
+                      //     upperLimit: maxValue,
+                      //     variablesNames: variablesNames,
+                      //     timeLabels: timeLabels,
+                      //   ),
+                      // ),
+                      child: StackChart(
+                        personModel: persons[index],
+                        visSettings: VisSettings(
+                          colors: colors,
+                          lowerLimit: minValue,
+                          upperLimit: maxValue,
+                          variablesNames: variablesNames,
+                          timeLabels: timeLabels,
+                        ),
+                      ),
+                      // child: TemporalLinearChart(
+                      //   personModel: persons[index],
+                      //   visSettings: VisSettings(
+                      //     colors: colors,
+                      //     lowerLimit: minValue,
+                      //     upperLimit: maxValue,
+                      //     variablesNames: variablesNames,
+                      //     timeLabels: timeLabels,
+                      //   ),
+                      // ),
+                    ),
+                  );
+                },
+                itemCount: persons.length,
+              ),
+            ),
+          ],
         ),
       ),
     );

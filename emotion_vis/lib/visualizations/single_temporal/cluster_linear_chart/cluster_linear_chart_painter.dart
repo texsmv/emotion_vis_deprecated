@@ -5,6 +5,7 @@ import 'package:emotion_vis/models/emotion_dimension.dart';
 import 'package:emotion_vis/models/person_model.dart';
 import 'package:emotion_vis/time_series/models/MTSerie.dart';
 import 'package:emotion_vis/utils/utils.dart';
+import 'package:emotion_vis/visualizations/vis_settings.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -15,12 +16,14 @@ class ClusterLinearChartPainter extends CustomPainter {
   List<PersonModel> blueCluster;
   List<PersonModel> redCluster;
   BuildContext context;
+  VisSettings visSettings;
 
   ClusterLinearChartPainter({
     @required this.blueCluster,
     @required this.redCluster,
     @required this.variableName,
     @required this.context,
+    @required this.visSettings,
   });
 
   Paint valuesPaint;
@@ -47,7 +50,8 @@ class ClusterLinearChartPainter extends CustomPainter {
 
     _width = size.width;
     _height = size.height;
-    _dateHorizontalSpace = graphicWidth / (_seriesController.windowSize - 1);
+    // TODO check this
+    _dateHorizontalSpace = graphicWidth / (_seriesController.windowLength - 1);
 
     valuesPaint = Paint()
       ..color = Colors.grey
@@ -67,21 +71,19 @@ class ClusterLinearChartPainter extends CustomPainter {
   void drawCanvasInfo(Canvas canvas) {
     for (int i = 0; i <= 10; i++) {
       canvas.drawLine(
-          Offset(
-              0, emotionValue2Heigh(_seriesController.upperBound / 10.0 * i)),
+          Offset(0, emotionValue2Heigh(visSettings.upperLimit / 10.0 * i)),
           Offset(graphicWidth,
-              emotionValue2Heigh(_seriesController.upperBound / 10.0 * i)),
+              emotionValue2Heigh(visSettings.upperLimit / 10.0 * i)),
           valuesPaint);
     }
     for (int i = 0; i <= 10; i++) {
       canvas.drawLine(
-          Offset(
-              -40, emotionValue2Heigh(_seriesController.upperBound / 10.0 * i)),
+          Offset(-40, emotionValue2Heigh(visSettings.upperLimit / 10.0 * i)),
           Offset(graphicWidth + _leftOffset,
-              emotionValue2Heigh(_seriesController.upperBound / 10.0 * i)),
+              emotionValue2Heigh(visSettings.upperLimit / 10.0 * i)),
           valuesPaint);
 
-      double value = (_seriesController.upperBound / 10.0 * i);
+      double value = (visSettings.upperLimit / 10.0 * i);
       TextSpan span = new TextSpan(
           style: new TextStyle(color: Colors.grey[800], fontSize: 12),
           text: value.toStringAsFixed(1));
@@ -92,8 +94,8 @@ class ClusterLinearChartPainter extends CustomPainter {
       tp.layout();
       tp.paint(
           canvas,
-          new Offset(-60,
-              emotionValue2Heigh(_seriesController.upperBound / 10.0 * i) - 8));
+          new Offset(
+              -60, emotionValue2Heigh(visSettings.upperLimit / 10.0 * i) - 8));
     }
     canvas.save();
     canvas.translate(-10, emotionValue2Heigh(0));
@@ -124,7 +126,8 @@ class ClusterLinearChartPainter extends CustomPainter {
 
     drawCanvasInfo(canvas);
     for (var k = 0; k < blueCluster.length; k++) {
-      for (int i = 0; i < _seriesController.windowSize - 1; i++) {
+      // todo check this
+      for (int i = 0; i < _seriesController.windowLength - 1; i++) {
         canvas.drawLine(
           Offset(i * _dateHorizontalSpace,
               emotionValue2Heigh(blueCluster[k].mtSerie.at(i, emotion))),
@@ -136,7 +139,8 @@ class ClusterLinearChartPainter extends CustomPainter {
     }
 
     for (var k = 0; k < redCluster.length; k++) {
-      for (int i = 0; i < _seriesController.windowSize - 1; i++) {
+      // todo check this
+      for (int i = 0; i < _seriesController.windowLength - 1; i++) {
         canvas.drawLine(
           Offset(i * _dateHorizontalSpace,
               emotionValue2Heigh(redCluster[k].mtSerie.at(i, emotion))),
@@ -150,8 +154,7 @@ class ClusterLinearChartPainter extends CustomPainter {
   }
 
   double emotionValue2Heigh(double value) {
-    return graphicHeight -
-        (value / _seriesController.upperBound * graphicHeight);
+    return graphicHeight - (value / visSettings.upperLimit * graphicHeight);
   }
 
   @override

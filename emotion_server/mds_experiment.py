@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sktime.utils.load_data import from_long_to_nested
 from models.time_serie import MultivariateTimeSerie
-from models.time_series_dataset import TimeSeriesDataset
+from models.time_series_dataset import MTSerieDataset
 from utils.time_series_utils import distance_matrix, time_serie_from_eml
 from dimensionality_reduction.mds import mts_mds
 import matplotlib.pyplot as plt
@@ -73,7 +73,7 @@ files = [
 ]
 
 
-dataset =  TimeSeriesDataset()
+dataset =  MTSerieDataset()
 
 for file in files:
     mtserie = time_serie_from_eml(PATH + file)

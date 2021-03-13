@@ -13,17 +13,23 @@ import 'package:get/get.dart';
 
 class HomeController extends GetxController {
   SeriesController _seriesController = Get.find();
-  ProjectionController _projectionController = Get.find();
+
+  RxInt stackIndex = 0.obs;
+
+  RxString clusterIdA = "".obs;
+  RxString clusterIdB = "".obs;
 
   List<PersonModel> get blueCluster => _seriesController.blueCluster;
   List<PersonModel> get redCluster => _seriesController.redCluster;
+
+  List<String> get clusterLabels => _seriesController.clustersLabels;
 
   List<String> get variablesNames => List.generate(
       _seriesController.dimensions.length,
       (index) => _seriesController.dimensions[index].name);
 
   List<String> get variablesOrdered =>
-      _projectionController.variablesNamesOrdered ?? variablesNames;
+      _seriesController.variablesNamesOrdered ?? variablesNames;
 
   EmotionModelType get emotionModelType => _seriesController.modelType;
 
@@ -95,48 +101,18 @@ class HomeController extends GetxController {
   }
 
   void calculateMds() async {
-    await _seriesController.setEmotionAlphas(
-      List.generate(_seriesController.dimensions.length,
-          (index) => _seriesController.dimensions[index].alpha),
-    );
-    _projectionController.calculateMdsCoordinates();
+    await _seriesController.updateSettings(
+        alphas: List.generate(_seriesController.dimensions.length,
+            (index) => _seriesController.dimensions[index].alpha));
+    _seriesController.calculateMdsCoordinates();
   }
 
-  void orderSeriesByRank() {
-    _projectionController.orderSeriesByRank(blueCluster, redCluster);
+  void orderSeriesByRank() async {
+    print(await _seriesController.orderSeriesByRank(
+        clusterIdA.value, clusterIdB.value));
   }
 
-  int get windowSize => _seriesController.windowSize;
-
-  set windowSize(int value) {
-    // visualizationSettings.windowTimeUnitQuantity.value = value;
+  void doClustering() {
+    _seriesController.doClustering();
   }
-
-  // ------------ Window step size stuff -----------------------
-
-  int get windowStepSize => _seriesController.windowStep;
-
-  set windowStepSize(int value) {
-    // visualizationSettings.windowBiasTimeUnitQuantity.value = value;
-  }
-
-  // ------------ Play button stuff -----------------------
-  AnimationController playController;
-
-  RxBool _play = false.obs;
-
-  bool get play => _play.value;
-
-  set play(bool value) {
-    _play.value = value;
-    if (_play.value) {
-      playController.forward();
-      reproduceController.reset();
-      reproduceController.forward();
-    } else
-      playController.reverse();
-  }
-
-  // ------------ Reproduce loop stuff -----------------------
-  AnimationController reproduceController;
 }

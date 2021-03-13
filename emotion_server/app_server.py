@@ -1,8 +1,9 @@
 from flask import Flask, jsonify, request
-from flask_cors import CORS
-from utils.utils import time_serie_from_eml_string
-from mts.classes.time_series_dataset import TimeSeriesDataset
-from models.emotion_dataset_controller import EmotionDatasetController
+from flask_cors import CORS, core
+from sklearn import cluster
+from mts.core.mtserie_dataset import MTSerieDataset
+from models.emotion_dataset_controller import *
+
 import json
 import numpy as np
 from flask import jsonify
@@ -10,111 +11,120 @@ from flask import jsonify
 app = Flask(__name__)
 CORS(app)
 
-dataController =  EmotionDatasetController()
+appController = AppController()
+
+@app.route("/routeGetDatasetsInfo", methods=['POST'])
+def getDatasetsInfo():
+    return jsonify({
+        "loadedDatasetsIds": appController.loadedDatasets,
+        "localDatasetsIds": appController.localDatasetsIds,
+                })
+
+@app.route("/loadLocalDataset", methods=['POST'])
+def loadLocalDataset():
+    datasetId = request.form.get('datasetId')
+    succed = appController.loadLocalDataset(datasetId)
+    return jsonify({
+        "state": "success" if succed  else "error"
+    })
+
+@app.route("/removeDataset", methods=['POST'])
+def removeDataset():
+    datasetId = request.form.get('datasetId')
+    succed = appController.removeDataset(datasetId)
+    return jsonify({
+        "state": "success" if succed  else "error"
+    })
+
+@app.route("/initializeDataset", methods=['POST'])
+def initializeDataset():
+    datasetId = request.form.get('datasetId')
+    succed = appController.initializeDataset(datasetId)
+    return jsonify({
+        "state": "success" if succed  else "error"
+    })
+
+@app.route("/addEmlToDataset", methods=['POST'])
+def addEmlToDataset():
+    eml = request.form.get('eml')
+    datasetId = request.form.get('datasetId')
+    succed = appController.addEmlToDataset(datasetId, eml)
+    return jsonify({
+        "state": "success" if succed  else "error"
+    })
+
+@app.route("/getMTSeries", methods=['POST'])
+def getMTSeries():
+    datasetId = request.form.get('datasetId')
+    procesed = True if request.form.get('procesed') == "True" else False
+    begin = int(request.form.get('begin'))
+    end = int(request.form.get('end'))
+    ids =  json.loads(request.form.get('ids'))
+    print("procesed: {}".format(procesed))
+    return jsonify(appController.getMTSeriesInRange(datasetId, ids, begin, end, procesed))
+
+@app.route("/getDatasetInfo", methods=['POST'])
+def getDatasetInfo():
+    datasetId = request.form.get('datasetId')
+    procesed = True if request.form.get('procesed') == "True" else False
+    print("procesed: {}".format(procesed))
+    dataInfo = appController.getDatasetInfo(datasetId, procesed)
+    return jsonify(dataInfo)
+
+@app.route("/downsampleData", methods=['POST'])
+def downsampleData():
+    datasetId = request.form.get('datasetId')
+    rule = request.form.get('rule')
+    appController.downsampleDataset(datasetId, rule)
+    return jsonify({
+        "state": "success"
+    })
+
+@app.route("/computeDk", methods=['POST'])
+def computeDk():
+    datasetId = request.form.get('datasetId')
+    variables = json.loads(request.form.get('variables'))
+    # distanceType = int(request.form.get('distanceType'))
+    procesed = True if request.form.get('procesed') == "True" else False
+    D_k = appController.compute_D_k(datasetId, variables, procesed=procesed, distanceType=DistanceType.EUCLIDEAN)
+    D_k = {key: D_k[key].tolist() for key in D_k.keys()}
+    return jsonify(D_k)
 
 
-@app.route("/openEml", methods=['POST'])
-def openEml():
-  eml = request.form.get('eml')
-  isCategorical = request.form.get('isCategorical') == 'True'
-  id = dataController.addEml(eml, isCategorical=isCategorical)
-  return id
-
-@app.route("/initialize", methods=['POST'])
-def initialize():
-  global dataController
-  dataController =  EmotionDatasetController()
-  return "success"
-
-@app.route("/getIds", methods=['POST'])
-def getIds():
-  return jsonify(dataController.getIds())
-
-@app.route("/calculateBounds", methods=['POST'])
-def calculateBounds():
-  dataController.calculateValuesBounds()
-  return "success"
-
-@app.route("/getBounds", methods=['POST'])
-def getBounds():
-  return jsonify(dataController.getValuesBounds())
-
-@app.route("/setBounds", methods=['POST'])
-def setBounds():
-  minVal = float(request.form.get('min'))
-  maxVal = float(request.form.get('max'))
-  dataController.setValuesBounds(minVal, maxVal)
-  return "succes"
-
-@app.route("/getInstanceLength", methods=['POST'])
-def getInstanceLength():
-  return jsonify(dataController.getInstanceLength())
-
-@app.route("/getTimeLength", methods=['POST'])
-def getTimeLength():
-  return jsonify(dataController.getTimeLength())
-
-@app.route("/getDimensionsLabels", methods=['POST'])
-def getDimensionsLabels():
-  return jsonify(dataController.getVariablesNames())
-
-@app.route("/getValuesInRange", methods=['POST'])
-def getValuesInRange():
-  begin = int(request.form.get('begin'))
-  end = int(request.form.get('end'))
-  return dataController.queryAllInRange(begin, end)
-
-@app.route("/getAllMetadata", methods=['POST'])
-def getAllMetadata():
-  return jsonify(dataController.dataset.getAllMetadata())
-
-@app.route("/getNumericalLabels", methods=['POST'])
-def getNumericalLabels():
-  print(dataController.getNumericalLabels())
-  return jsonify(dataController.getNumericalLabels())
-
-@app.route("/getCategoricalLabels", methods=['POST'])
-def getCategoricalLabels():
-  print(dataController.getCategoricalLabels())
-  return jsonify(dataController.getCategoricalLabels())
+@app.route("/getDatasetProjection", methods=['POST'])
+def getDatasetProjection():
+    datasetId = request.form.get('datasetId')
+    D_k = json.loads(request.form.get('D_k'))
+    D_k = {key: np.array(D_k[key]) for key in D_k.keys()}
+    alphas = json.loads(request.form.get('alphas'))
+    # distanceType = int(request.form.get('distanceType'))
+    coords = appController.getMdsProjection(datasetId, D_k, alphas)
+    return jsonify(coords)
 
 
-@app.route("/getMDS", methods=['POST'])
-def getMDS():
-  return dataController.mdsProjection()
-
-@app.route("/getSubsetsDimensionsRankings", methods=['POST'])
-def getSubsetsDimensionsRankings():
-  blueCluster = json.loads(request.form.get('blueCluster'))
-  redCluster = json.loads(request.form.get('redCluster'))
-  print(dataController.getSubsetsDimensionsRankings(blueCluster, redCluster))
-  print(jsonify(dataController.getSubsetsDimensionsRankings(blueCluster, redCluster)))
-  return jsonify(dataController.getSubsetsDimensionsRankings(blueCluster, redCluster))
-
-@app.route("/setEmotionAlphas", methods=['POST'])
-def setEmotionAlphas():
-  alphas = json.loads(request.form.get('alphas'))
-  dataController.alphas = np.array(alphas)
-  return "success"
-
-@app.route("/setCategoricalAlphas", methods=['POST'])
-def setCategoricalAlphas():
-  alphas = json.loads(request.form.get('alphas'))
-  dataController.categoricalAlphas = np.array(alphas)
-  return "success"
-
-@app.route("/setNumericalAlphas", methods=['POST'])
-def setNumericalAlphas():
-  alphas = json.loads(request.form.get('alphas'))
-  dataController.numericalAlphas = np.array(alphas)
-  return "success"
-
-@app.route("/removeVariables", methods=['POST'])
-def removeVariables():
-  names = json.loads(request.form.get('names'))
-  dataController.removeVariables(names)
-  return "success"
+@app.route("/doClustering", methods=['POST'])
+def doClustering():
+    datasetId = request.form.get('datasetId')
+    coords = json.loads(request.form.get('coords'))
+    k = int(request.form.get('k'))
+    
+    clusters = appController.doClustering(datasetId, coords, k)
+    clusters = {int(k): clusters[k] for k in clusters.keys()}
+    return jsonify(clusters)
 
 
+@app.route("/getFishersDiscriminantRanking", methods=['POST'])
+def getFishersDiscriminantRanking():
+    datasetId = request.form.get('datasetId')
+    D_k = json.loads(request.form.get('D_k'))
+    D_k = {key: np.array(D_k[key]) for key in D_k.keys()}
+    blueCluster = json.loads(request.form.get('blueCluster'))
+    redCluster = json.loads(request.form.get('redCluster'))
+    
+    j_s = appController.getFishersDiscriminantRanking(datasetId,D_k,blueCluster, redCluster)
+    
+    return jsonify(j_s)
+
+    
 if __name__ == "__main__":
-  app.run()
+    app.run()

@@ -10,7 +10,7 @@ Future<DimensionalDimension> pickDimensionalDimension(
 
   await showDialog(
     context: Get.context,
-    child: AlertDialog(
+    builder: (_) => AlertDialog(
       title: const Text('Pick a dimension'),
       content: Container(
           width: 300,

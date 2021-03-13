@@ -92,44 +92,44 @@ class ProjectionPlotUiController extends GetxController {
   }
 
   void pointerDownEvent(PointerDownEvent event) {
-    if (!showSelectedArea)
-      selectedAreaStart = event.localPosition;
-    else
-      selectedAreaEnd = event.localPosition;
-    showSelectedArea = !showSelectedArea;
+    // if (!showSelectedArea)
+    //   selectedAreaStart = event.localPosition;
+    // else
+    //   selectedAreaEnd = event.localPosition;
+    // showSelectedArea = !showSelectedArea;
 
-    if (!showSelectedArea) {
-      if (blueCluster)
-        _seriesController.blueCluster = [];
-      else
-        _seriesController.redCluster = [];
+    // if (!showSelectedArea) {
+    //   if (blueCluster)
+    //     _seriesController.blueCluster = [];
+    //   else
+    //     _seriesController.redCluster = [];
 
-      for (var i = 0; i < personModels.length; i++) {
-        double x =
-            rangeConverter(personModels[i].x, xlim.dx, xlim.dy, 0, canvasWidth);
-        double y = rangeConverter(
-            personModels[i].y, ylim.dx, ylim.dy, 0, canvasHeight);
-        if ((x > min(selectedAreaEnd.dx, selectedAreaStart.dx)) &&
-            (x < max(selectedAreaEnd.dx, selectedAreaStart.dx)) &&
-            (y > min(selectedAreaEnd.dy, selectedAreaStart.dy)) &&
-            (y < max(selectedAreaEnd.dy, selectedAreaStart.dy))) {
-          if (blueCluster) {
-            personModels[i].clusterId = 0;
-            _seriesController.blueCluster.add(personModels[i]);
-          } else {
-            _seriesController.redCluster.add(personModels[i]);
-            personModels[i].clusterId = 1;
-          }
-        } else {
-          if (blueCluster && personModels[i].clusterId == 0) {
-            personModels[i].clusterId = null;
-          } else if (!blueCluster && personModels[i].clusterId == 1) {
-            personModels[i].clusterId = null;
-          }
-        }
-      }
-    }
-    _seriesController.notify();
-    update();
+    //   for (var i = 0; i < personModels.length; i++) {
+    //     double x =
+    //         rangeConverter(personModels[i].x, xlim.dx, xlim.dy, 0, canvasWidth);
+    //     double y = rangeConverter(
+    //         personModels[i].y, ylim.dx, ylim.dy, 0, canvasHeight);
+    //     if ((x > min(selectedAreaEnd.dx, selectedAreaStart.dx)) &&
+    //         (x < max(selectedAreaEnd.dx, selectedAreaStart.dx)) &&
+    //         (y > min(selectedAreaEnd.dy, selectedAreaStart.dy)) &&
+    //         (y < max(selectedAreaEnd.dy, selectedAreaStart.dy))) {
+    //       if (blueCluster) {
+    //         personModels[i].clusterId = 0;
+    //         _seriesController.blueCluster.add(personModels[i]);
+    //       } else {
+    //         _seriesController.redCluster.add(personModels[i]);
+    //         personModels[i].clusterId = 1;
+    //       }
+    //     } else {
+    //       if (blueCluster && personModels[i].clusterId == 0) {
+    //         personModels[i].clusterId = null;
+    //       } else if (!blueCluster && personModels[i].clusterId == 1) {
+    //         personModels[i].clusterId = null;
+    //       }
+    //     }
+    //   }
+    // }
+    // _seriesController.notify();
+    // update();
   }
 }

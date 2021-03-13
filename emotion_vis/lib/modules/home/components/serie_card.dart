@@ -41,8 +41,8 @@ class SerieCard extends GetView<HomeController> {
                         colors: Map.fromIterable(_seriesController.dimensions,
                             key: (dimension) => dimension.name,
                             value: (dimension) => dimension.color),
-                        lowerLimit: _seriesController.lowerBound,
-                        upperLimit: _seriesController.upperBound,
+                        lowerLimits: _seriesController.lowerBounds,
+                        upperLimits: _seriesController.upperBounds,
                         variablesNames: controller.variablesNames,
                         timeLabels: List.generate(
                             _seriesController.temporalLength,
@@ -58,8 +58,8 @@ class SerieCard extends GetView<HomeController> {
                         colors: Map.fromIterable(_seriesController.dimensions,
                             key: (dimension) => dimension.name,
                             value: (dimension) => dimension.color),
-                        lowerLimit: _seriesController.lowerBound,
-                        upperLimit: _seriesController.upperBound,
+                        lowerLimits: _seriesController.lowerBounds,
+                        upperLimits: _seriesController.upperBounds,
                         variablesNames: controller.variablesNames,
                         timeLabels: List.generate(
                             _seriesController.temporalLength,
@@ -80,8 +80,8 @@ class SerieCard extends GetView<HomeController> {
                         colors: Map.fromIterable(_seriesController.dimensions,
                             key: (dimension) => dimension.name,
                             value: (dimension) => dimension.color),
-                        lowerLimit: _seriesController.lowerBound,
-                        upperLimit: _seriesController.upperBound,
+                        lowerLimits: _seriesController.lowerBounds,
+                        upperLimits: _seriesController.upperBounds,
                         variablesNames: controller.variablesNames,
                         timeLabels: List.generate(
                             _seriesController.temporalLength,
@@ -96,8 +96,8 @@ class SerieCard extends GetView<HomeController> {
                         colors: Map.fromIterable(_seriesController.dimensions,
                             key: (dimension) => dimension.name,
                             value: (dimension) => dimension.color),
-                        lowerLimit: _seriesController.lowerBound,
-                        upperLimit: _seriesController.upperBound,
+                        lowerLimits: _seriesController.lowerBounds,
+                        upperLimits: _seriesController.upperBounds,
                         variablesNames: controller.variablesNames,
                         timeLabels: List.generate(
                             _seriesController.temporalLength,

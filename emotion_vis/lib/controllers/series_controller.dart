@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:emotion_vis/app_constants.dart';
 import 'package:emotion_vis/enums/app_enums.dart';
 import 'package:emotion_vis/models/emotion_dimension.dart';
 import 'package:emotion_vis/models/emotions_models.dart';
@@ -7,33 +8,53 @@ import 'package:emotion_vis/models/person_model.dart';
 import 'package:emotion_vis/models/visualization_levels.dart';
 import 'package:emotion_vis/repositories/projections_repository.dart';
 import 'package:emotion_vis/repositories/series_repository.dart';
+import 'package:emotion_vis/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:random_color/random_color.dart';
 import 'package:tuple/tuple.dart';
 
 class SeriesController extends GetxController {
-  double lowerBound;
-  double upperBound;
+  Map<String, double> minValues;
+  Map<String, double> maxValues;
+  Map<String, double> upperBounds;
+  Map<String, double> lowerBounds;
+
+  List<double> alphas = [];
+
+  List<String> variablesNames = [];
+  List<String> emotionsVariablesNames = [];
+  List<String> metadataVariablesNames = [];
+
+  List<String> dates = [];
+  List<String> allowedDownsampleRules = [];
+  bool isDataDated = false;
 
   List<PersonModel> _persons = [];
 
   List<String> _ids = [];
-
   List<String> get ids => _ids;
 
-  int _windowSize = 7;
-  int _windowStep = 1;
+  int _windowLength = 7;
   int _windowPosition = 0;
+
   int _instanceLength = 0;
-  int _temporalLength = 0;
+  int _timeLength = 0;
+  int _variablesLength = 0;
+  int _emotionsVariablesLength = 0;
+  int _metadataVariablesLength = 0;
 
   int get instanceLength => _instanceLength;
-  int get temporalLength => _temporalLength;
+  int get temporalLength => _timeLength;
+  int get timeLength => _timeLength;
+  int get variablesLength => _variablesLength;
+  int get emotionsVariablesLength => _emotionsVariablesLength;
+  int get metadataVariablesLength => _metadataVariablesLength;
+
   int get emotionDimensionLength => dimensions.length;
 
-  int get windowSize => _windowSize;
-  int get windowStep => _windowStep;
+  int get windowLength => _windowLength;
+  int get windowPosition => _windowPosition;
 
   PersonModel _selectedPerson;
   PersonModel get selectedPerson => _selectedPerson;
@@ -44,10 +65,14 @@ class SeriesController extends GetxController {
 
   List<PersonModel> get persons => _persons;
 
+  List<String> clustersLabels = [];
+  Map<String, List<String>> clusters = {};
+  Map<String, Color> clustersColors = {};
+
   List<PersonModel> blueCluster = [];
   List<PersonModel> redCluster = [];
-  List<PersonModel> get clusteredPersons =>
-      List.from(blueCluster)..addAll(redCluster);
+  // List<PersonModel> get clusteredPersons =>
+  //     List.from(blueCluster)..addAll(redCluster);
 
   List<EmotionDimension> dimensions = [];
   List<CategoricalFeature> categoricalFeatures = [];
@@ -134,28 +159,30 @@ class SeriesController extends GetxController {
     update();
   }
 
-  Future<NotifierState> loadValuesInRange(int begin, int end) async {
+  Future<NotifierState> loadMTSeriesInRange(int begin, int end) async {
     _persons = [];
     Map<String, dynamic> queryMap =
-        await SeriesRepository.getAllValuesInRange(begin, end);
-    Map<String, dynamic> metadataMap = await SeriesRepository.getAllMetadata();
+        await SeriesRepository.getMTSeriesInRange(begin, end);
+
+    // Map<String, dynamic> metadataMap = await SeriesRepository.getAllMetadata();
     List<String> ids = queryMap.keys.toList();
+
     for (int i = 0; i < ids.length; i++) {
-      Map dimensions = queryMap[ids[i]];
-      print("Start!!");
+      Map dimensions = queryMap[ids[i]]["temporalVariables"];
+      print(dimensions);
       PersonModel personModel =
           PersonModel.fromMap(map: dimensions, id: ids[i]);
-      personModel.metadata = metadataMap[ids[i]]['metadata'];
+      personModel.metadata = queryMap[ids[i]]['metadata'];
       personModel.categoricalValues =
-          metadataMap[ids[i]]['catFeatures'].cast<String>();
+          queryMap[ids[i]]['categoricalFeatures'].cast<String>();
       personModel.categoricalLabels =
-          metadataMap[ids[i]]['catLabels'].cast<String>();
+          queryMap[ids[i]]['categoricalLabels'].cast<String>();
       print(personModel.categoricalLabels);
       print("Almonst!!");
       personModel.numericalValues =
-          metadataMap[ids[i]]['numFeatures'].cast<double>();
+          queryMap[ids[i]]['numericalFeatures'].cast<double>();
       personModel.numericalLabels =
-          metadataMap[ids[i]]['numLabels'].cast<String>();
+          queryMap[ids[i]]['numericalLabels'].cast<String>();
       print("DONE!!");
       _persons.add(personModel);
     }
@@ -163,9 +190,9 @@ class SeriesController extends GetxController {
     return NotifierState.SUCCESS;
   }
 
-  void updateLocalSettings({int newWindowSize, int newWindowStep}) {
-    if (newWindowSize != null) _windowSize = newWindowSize;
-    if (newWindowStep != null) _windowStep = newWindowStep;
+  void updateLocalSettings({int windowPosition, int windowLength}) {
+    if (windowPosition != null) _windowPosition = windowPosition;
+    if (windowLength != null) _windowLength = windowLength;
 
     update();
   }
@@ -184,59 +211,25 @@ class SeriesController extends GetxController {
     return;
   }
 
-  Future<NotifierState> setBounds(double minValue, double maxValue) async {
-    NotifierState state = await SeriesRepository.setBounds(minValue, maxValue);
-    lowerBound = minValue;
-    upperBound = maxValue;
-    update();
-    return NotifierState.SUCCESS;
-  }
-
-  Future<NotifierState> initBounds() async {
-    await SeriesRepository.calculateBounds();
-    List<double> values = await SeriesRepository.getBounds();
-    print(values);
-    lowerBound = values[0];
-    upperBound = values[1];
-    update();
-    return NotifierState.SUCCESS;
-  }
-
-  Future<NotifierState> initLengths() async {
-    _instanceLength = await SeriesRepository.getInstanceLength();
-    _temporalLength = await SeriesRepository.getTimeLength();
-
-    update();
-    return NotifierState.SUCCESS;
-  }
-
-  Future<NotifierState> initDimensions() async {
-    List<String> dimensionsNames = await SeriesRepository.getDimensionsLabels();
+  Future<NotifierState> initEmotionsVariables({
+    @required List<String> names,
+    @required List<Color> colors,
+    List<DimensionalDimension> dimensionalDimensions,
+  }) async {
     dimensions = List.generate(
-      dimensionsNames.length,
+      names.length,
       (index) => EmotionDimension(
-          name: dimensionsNames[index],
-          color: RandomColor().randomColor(),
-          dimensionalDimension: DimensionalDimension.NONE),
+          name: names[index],
+          color: colors[index],
+          dimensionalDimension: dimensionalDimensions != null
+              ? dimensionalDimensions[index]
+              : DimensionalDimension.NONE),
     );
-    if (modelType == EmotionModelType.DIMENSIONAL) {
-      for (var i = 0; i < dimensions.length; i++) {
-        dimensions[i].remove = true;
-      }
-    }
-    _windowSize = temporalLength;
     update();
     return NotifierState.SUCCESS;
   }
 
-  Future<NotifierState> updateBounds(double minValue, double maxValue) async {
-    List<double> values = await SeriesRepository.getBounds();
-    lowerBound = values[0];
-    upperBound = values[1];
-    update();
-    return NotifierState.SUCCESS;
-  }
-
+  @deprecated
   Future<void> loadFeatures() async {
     List<String> numericalLabels = await SeriesRepository.getNumericalLabels();
     print(numericalLabels);
@@ -263,16 +256,151 @@ class SeriesController extends GetxController {
     return state;
   }
 
-  Future<NotifierState> removeMarkedVariables() async {
-    List<String> names = [];
-    for (var i = 0; i < dimensions.length; i++) {
-      if (dimensions[i].remove) names.add(dimensions[i].name);
-    }
-    for (var i = 0; i < names.length; i++) {
-      dimensions.removeWhere((dimension) => dimension.name == names[i]);
-    }
+  Future<NotifierState> removeMarkedVariables(List<String> names) async {
     await SeriesRepository.removeVariables(names);
     update();
     return NotifierState.SUCCESS;
+  }
+
+  void setVariablesNames({
+    @required List<String> emotionsNames,
+    @required List<String> metadataNames,
+    bool notify = true,
+  }) {
+    metadataVariablesNames = metadataNames;
+    emotionsVariablesNames = emotionsNames;
+    _emotionsVariablesLength = emotionsNames.length;
+    _metadataVariablesLength = metadataNames.length;
+    if (notify) update();
+  }
+
+  Future<NotifierState> initDataInfo() async {
+    Map<String, dynamic> info = await SeriesRepository.computeDataInfo();
+    _timeLength = info[INFO_LEN_TIME];
+    _instanceLength = info[INFO_LEN_INSTANCE];
+    _variablesLength = info[INFO_LEN_VARIABLES];
+    variablesNames = List<String>.from(info[INFO_SERIES_LABELS]);
+    isDataDated = info[INFO_IS_DATED];
+    if (isDataDated) {
+      dates = List<String>.from(info[INFO_DATES]);
+      allowedDownsampleRules = List<String>.from(info[INFO_DOWNSAMPLE_RULES]);
+    }
+    minValues = Map<String, double>.from(info[INFO_MIN_VALUES]);
+    maxValues = Map<String, double>.from(info[INFO_MAX_VALUES]);
+    update();
+    return NotifierState.SUCCESS;
+  }
+
+  Future<NotifierState> initSettings() async {
+    alphas = List.filled(emotionsVariablesLength, 1.0);
+    lowerBounds = minValues;
+    upperBounds = maxValues;
+    await SeriesRepository.setSettings(
+      alphas: alphas,
+      emotionLabels: emotionsVariablesNames,
+      lowerBounds: minValues,
+      upperBounds: maxValues,
+    );
+    return NotifierState.SUCCESS;
+  }
+
+  Future<NotifierState> updateSettings({
+    List<double> alphas,
+    List<String> emotionLabels,
+    Map<String, double> lowerBounds,
+    Map<String, double> upperBounds,
+  }) async {
+    if (alphas != null) this.alphas = alphas;
+    if (emotionLabels != null) this.emotionsVariablesNames = emotionLabels;
+    if (lowerBounds != null) this.lowerBounds = lowerBounds;
+    if (upperBounds != null) this.upperBounds = upperBounds;
+    await SeriesRepository.setSettings(
+      alphas: this.alphas,
+      emotionLabels: this.emotionsVariablesNames,
+      lowerBounds: this.lowerBounds,
+      upperBounds: this.upperBounds,
+    );
+    return NotifierState.SUCCESS;
+  }
+
+  Future<NotifierState> downsampleData(DownsampleRule rule) async {
+    await SeriesRepository.downsampleData(Utils.downsampleRule2Str(rule));
+    return NotifierState.SUCCESS;
+  }
+
+  // * Projection stuff
+
+  List<String> variablesNamesOrdered;
+  double projectionMaxValue = -1;
+  bool projectionLoaded = false;
+
+  Future<NotifierState> calculateMdsCoordinates() async {
+    Map<String, dynamic> coordsMap =
+        await ProjectionsRepository.getMDScoords(emotionsVariablesNames);
+
+    for (var i = 0; i < persons.length; i++) {
+      var coord = coordsMap[persons[i].id];
+      persons[i].x = coord[0];
+      persons[i].y = coord[1];
+
+      if (persons[i].x.abs() > projectionMaxValue)
+        projectionMaxValue = persons[i].x.abs();
+      if (persons[i].y.abs() > projectionMaxValue)
+        projectionMaxValue = persons[i].y.abs();
+    }
+    projectionLoaded = true;
+    update();
+
+    print(coordsMap);
+  }
+
+  Future<NotifierState> orderSeriesByRank(
+      String clusterA, String clusterB) async {
+    List<String> blueClusterIds = clusters[clusterA];
+    List<String> redClusterIds = clusters[clusterB];
+    if (blueClusterIds.length == 0 || redClusterIds.length == 0)
+      return NotifierState.ERROR;
+
+    variablesNamesOrdered =
+        await ProjectionsRepository.getSubsetsDimensionsRankings(
+      blueClusterIds,
+      redClusterIds,
+    );
+    this.blueCluster = List.generate(blueClusterIds.length,
+        (index) => personModelById(blueClusterIds[index]));
+    this.redCluster = List.generate(
+        redClusterIds.length, (index) => personModelById(redClusterIds[index]));
+    print(this.blueCluster);
+    print(this.redCluster);
+    update();
+    return NotifierState.SUCCESS;
+  }
+
+  Future<NotifierState> doClustering({int k = 3}) async {
+    Map<String, dynamic> result = await SeriesRepository.doClustering();
+    List<String> clusterLabels = result.keys.map((e) => e).toList();
+    this.clustersLabels = clusterLabels;
+    clustersColors = {};
+    clusters = {};
+    for (var i = 0; i < clusterLabels.length; i++) {
+      print(clusterLabels[i]);
+      List<String> clusterIds = List<String>.from(result[clusterLabels[i]]);
+      clusters[clusterLabels[i]] = clusterIds;
+      clustersColors[clusterLabels[i]] = RandomColor().randomColor();
+      for (var j = 0; j < clusterIds.length; j++) {
+        PersonModel personModel = personModelById(clusterIds[j]);
+        personModel.clusterId = clusterLabels[i];
+      }
+    }
+
+    update();
+  }
+
+  PersonModel personModelById(String id) {
+    for (var i = 0; i < persons.length; i++) {
+      if (persons[i].id == id) {
+        return persons[i];
+      }
+    }
   }
 }

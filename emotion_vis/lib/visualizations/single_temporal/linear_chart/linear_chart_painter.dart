@@ -28,7 +28,7 @@ class LinearChartPainter extends CustomPainter {
   double _width;
   double _height;
   double _horizontalValuesSpace;
-  double _infoPointRadius = 6;
+  double _infoPointRadius = 2;
   double _leftOffset = 80;
   double _rightOffset = 100;
   double _topOffset = 30;
@@ -62,8 +62,8 @@ class LinearChartPainter extends CustomPainter {
       ..strokeWidth = 2;
 
     drawCanvasInfo(canvas);
-    for (int i = 0; i < personModel.mtSerie.variablesLength; i++) {
-      drawLines(canvas, personModel.mtSerie.variablesNames[i]);
+    for (int i = 0; i < visSettings.variablesNames.length; i++) {
+      drawLines(canvas, visSettings.variablesNames[i]);
     }
   }
 
@@ -139,12 +139,12 @@ class LinearChartPainter extends CustomPainter {
       ..color = visSettings.colors[emotion]
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = 5;
+      ..strokeWidth = 1;
     Paint circlePaint = Paint()
       ..color = visSettings.colors[emotion]
       ..style = PaintingStyle.fill
       ..strokeCap = StrokeCap.round
-      ..strokeWidth = 5;
+      ..strokeWidth = 2;
 
     linePath = Path();
 

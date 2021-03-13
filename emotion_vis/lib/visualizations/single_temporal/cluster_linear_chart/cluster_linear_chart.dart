@@ -1,6 +1,7 @@
 import 'package:emotion_vis/models/person_model.dart';
 import 'package:emotion_vis/time_series/models/MTSerie.dart';
 import 'package:emotion_vis/visualizations/single_temporal/linear_chart/linear_chart_painter.dart';
+import 'package:emotion_vis/visualizations/vis_settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:touchable/touchable.dart';
@@ -11,10 +12,12 @@ class ClusterLinearChart extends StatefulWidget {
   List<PersonModel> blueCluster;
   List<PersonModel> redCluster;
   String variableName;
+  VisSettings visSettings;
   ClusterLinearChart(
       {Key key,
       @required this.blueCluster,
       @required this.variableName,
+      @required this.visSettings,
       @required this.redCluster})
       : super(key: key);
 
@@ -28,6 +31,7 @@ class _ClusterLinearChartState extends State<ClusterLinearChart> {
     return CanvasTouchDetector(
       builder: (context) => CustomPaint(
         painter: ClusterLinearChartPainter(
+          visSettings: widget.visSettings,
           context: context,
           blueCluster: widget.blueCluster,
           redCluster: widget.redCluster,

@@ -1,4 +1,3 @@
-import 'package:device_preview/device_preview.dart';
 import 'package:emotion_vis/controllers/dimension_reduction_controller.dart';
 import 'package:emotion_vis/controllers/projection_controller.dart';
 import 'package:emotion_vis/controllers/series_controller.dart';
@@ -17,6 +16,7 @@ void main() async {
 
   Widget emoVisApp = GetMaterialApp(
     theme: ThemeData(
+      scaffoldBackgroundColor: Colors.white,
       primaryColor: Color.fromARGB(255, 97, 132, 236),
       accentColor: Color.fromARGB(255, 170, 188, 240),
       textTheme: GoogleFonts.ralewayTextTheme(
@@ -28,11 +28,7 @@ void main() async {
     initialRoute: RouteNames.INITIAL_SETTINGS,
   );
 
-  if (preview) {
-    runApp(DevicePreview(builder: (context) => emoVisApp));
-  } else {
-    runApp(emoVisApp);
-  }
+  runApp(emoVisApp);
 }
 
 loadInitialControllers() {
@@ -42,5 +38,5 @@ loadInitialControllers() {
   // Get.put(DimensionReductionController(), permanent: true);
 
   Get.put(SeriesController(), permanent: true);
-  Get.put(ProjectionController(), permanent: true);
+  // Get.put(ProjectionController(), permanent: true);
 }

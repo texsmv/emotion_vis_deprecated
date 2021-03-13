@@ -66,8 +66,9 @@ class _SplashScreenState extends State<SplashScreen> {
   /// Initial settings and configurations should be called here
   void startSettings() async {
     // Here gets the initial data
-    await seriesController.loadValuesInRange(0, seriesController.windowSize);
-    await seriesController.loadFeatures();
+    await seriesController.loadMTSeriesInRange(
+        0, seriesController.windowLength);
+    // await seriesController.loadFeatures();
     // await seriesController.setEmotionAlphas([0.5, 0.5, 0.5, 0.5, 0.5]);
 
     await Future.delayed(Duration(milliseconds: 900));

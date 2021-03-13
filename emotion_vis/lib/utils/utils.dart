@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:emotion_vis/controllers/series_controller.dart';
+import 'package:emotion_vis/enums/app_enums.dart';
 import 'package:emotion_vis/models/emotion_dimension.dart';
 import 'package:emotion_vis/models/time_unit.dart';
 import 'package:emotion_vis/models/visualization_levels.dart';
@@ -50,6 +51,46 @@ class Utils {
       default:
     }
   }
+
+  static String downsampleRule2Str(DownsampleRule rule) {
+    switch (rule) {
+      case DownsampleRule.YEARS:
+        return "A";
+      case DownsampleRule.MONTHS:
+        return "M";
+      case DownsampleRule.DAYS:
+        return "D";
+      case DownsampleRule.HOURS:
+        return "H";
+      case DownsampleRule.MINUTES:
+        return "T";
+      case DownsampleRule.SECONDS:
+        return "S";
+      case DownsampleRule.NONE:
+        return "NONE";
+        break;
+      default:
+    }
+  }
+
+  static DownsampleRule str2downsampleRule(String rule) {
+    switch (rule) {
+      case "A":
+        return DownsampleRule.YEARS;
+      case "M":
+        return DownsampleRule.MONTHS;
+      case "D":
+        return DownsampleRule.DAYS;
+      case "H":
+        return DownsampleRule.HOURS;
+      case "T":
+        return DownsampleRule.MINUTES;
+      case "S":
+        return DownsampleRule.SECONDS;
+        break;
+      default:
+    }
+  }
 }
 
 Offset polarToCartesian(double angle, double r) {
@@ -74,7 +115,7 @@ Future<Color> pickColor(Color pickerColor) async {
   Color pickedColor;
   await showDialog(
     context: Get.context,
-    child: AlertDialog(
+    builder: (_) => AlertDialog(
       title: const Text('Pick a color!'),
       content: SingleChildScrollView(
         child: ColorPicker(
@@ -85,20 +126,6 @@ Future<Color> pickColor(Color pickerColor) async {
           showLabel: true,
           pickerAreaHeightPercent: 0.8,
         ),
-        // Use Material color picker:
-        //
-        // child: MaterialPicker(
-        //   pickerColor: pickerColor,
-        //   onColorChanged: changeColor,
-        //   showLabel: true, // only on portrait mode
-        // ),
-        //
-        // Use Block color picker:
-        //
-        // child: BlockPicker(
-        //   pickerColor: currentColor,
-        //   onColorChanged: changeColor,
-        // ),
       ),
       actions: <Widget>[
         FlatButton(

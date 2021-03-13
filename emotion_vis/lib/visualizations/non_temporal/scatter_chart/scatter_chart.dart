@@ -88,14 +88,15 @@ class _ScatterChartState extends State<ScatterChart>
       child: CanvasTouchDetector(builder: (context) {
         return CustomPaint(
           painter: ScatterChartPainter(
-              context: context,
-              xlim: widget.xlim,
-              ylim: widget.ylim,
-              x_s: current_xs,
-              y_s: current_ys,
-              personsModels: widget.personModels,
-              // positions: positions,
-              onTap: widget.onTap),
+            context: context,
+            xlim: widget.xlim,
+            ylim: widget.ylim,
+            x_s: current_xs,
+            y_s: current_ys,
+            personsModels: widget.personModels,
+            // positions: positions,
+            onTap: widget.onTap,
+          ),
         );
       }),
     );

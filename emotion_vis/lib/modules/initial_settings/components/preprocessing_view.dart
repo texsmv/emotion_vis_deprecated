@@ -1,4 +1,6 @@
+import 'package:emotion_vis/enums/app_enums.dart';
 import 'package:emotion_vis/models/time_unit.dart';
+import 'package:emotion_vis/modules/initial_settings/components/time_serie_bounds_tile.dart';
 import 'package:emotion_vis/modules/initial_settings/initial_settings_controller.dart';
 import 'package:emotion_vis/utils/utils.dart';
 import 'package:flutter/material.dart';
@@ -17,71 +19,80 @@ class PreprocessingView extends GetView<InitialSettingsController> {
           Divider(
             color: Get.theme.accentColor,
           ),
-          Container(
-            height: 80,
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text("Unidad de tiempo:"),
-                    Obx(
-                      () => MenuButton(
-                        child: Container(
-                          width: 120,
-                          height: 30,
-                          color: Get.theme.primaryColor,
-                          alignment: Alignment.center,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            timeUnit2Str(controller.timeUnit.value),
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w400),
-                          ),
-                        ),
-                        items: TimeUnit.values,
-                        topDivider: true,
-                        scrollPhysics: AlwaysScrollableScrollPhysics(),
-                        onItemSelected: controller.onTimeUnitChanged,
-                        onMenuButtonToggle: (isToggle) {},
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.white.withAlpha(0)),
-                          borderRadius:
-                              const BorderRadius.all(Radius.circular(3.0)),
-                          color: Colors.white.withAlpha(0),
-                        ),
-                        divider: Container(
-                          height: 1,
-                          color: Colors.grey,
-                        ),
-                        toggledChild: Container(
-                          height: 30,
-                        ),
-                        itemBuilder: (TimeUnit timeUnit) => Container(
-                            width: 80,
+          // downsampling
+          Visibility(
+            visible: controller.showDateOptions,
+            child: Container(
+              height: 80,
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("Allowed downsample rules:"),
+                      Obx(
+                        () => MenuButton<DownsampleRule>(
+                          child: Container(
+                            width: 120,
                             height: 30,
-                            color: Colors.white,
-                            alignment: Alignment.centerLeft,
-                            child: Text(timeUnit2Str(timeUnit))),
+                            color: Get.theme.primaryColor,
+                            alignment: Alignment.center,
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              Utils.downsampleRule2Str(
+                                  controller.selectedRule.value),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w400),
+                            ),
+                          ),
+                          items: controller.allowedDownsampleRules,
+                          topDivider: true,
+                          scrollPhysics: AlwaysScrollableScrollPhysics(),
+                          onItemSelected: (DownsampleRule value) {
+                            controller.selectedRule.value = value;
+                          },
+                          onMenuButtonToggle: (isToggle) {},
+                          decoration: BoxDecoration(
+                            border:
+                                Border.all(color: Colors.white.withAlpha(0)),
+                            borderRadius:
+                                const BorderRadius.all(Radius.circular(3.0)),
+                            color: Colors.white.withAlpha(0),
+                          ),
+                          divider: Container(
+                            height: 1,
+                            color: Colors.grey,
+                          ),
+                          toggledChild: Container(
+                            height: 30,
+                          ),
+                          itemBuilder: (DownsampleRule value) => Container(
+                              width: 80,
+                              height: 30,
+                              color: Colors.white,
+                              alignment: Alignment.centerLeft,
+                              child: Text(Utils.downsampleRule2Str(value))),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                // Row(
-                //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                //   children: [
-                //     Text("cantidad de unidades de tiempo:"),
-                //     Container(
-                //         width: 80,
-                //         child: TextField(
-                //             controller: controller.timeUnitQuantity)),
-                //   ],
-                // ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
+          Divider(
+            color: Get.theme.accentColor,
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: controller.variablesLength,
+              itemBuilder: (context, index) => TimeSerieBoundsTile(
+                variableName: controller.variablesNames[index],
+              ),
+            ),
+          )
         ],
       ),
     );

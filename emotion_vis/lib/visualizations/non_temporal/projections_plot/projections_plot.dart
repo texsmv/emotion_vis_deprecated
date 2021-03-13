@@ -57,50 +57,79 @@ class _ProjectionPlotState extends State<ProjectionPlot>
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Row(
-          children: [
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () {
-                controller.blueCluster = true;
-              },
-              child: Container(
-                width: 120,
-                height: 20,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  color: Colors.blue,
-                ),
-                child: Text(
-                  "Blue cluster",
-                  style: GoogleFonts.montserrat(
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () {
-                controller.blueCluster = false;
-              },
-              child: Container(
-                width: 120,
-                height: 20,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  color: Colors.red,
-                ),
-                child: Text(
-                  "Red cluster",
-                  style: GoogleFonts.montserrat(
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+        // Row(
+        //   children: [
+        //     GestureDetector(
+        //       behavior: HitTestBehavior.opaque,
+        //       onTap: () {
+        //         controller.blueCluster = true;
+        //       },
+        //       child: Container(
+        //         width: 120,
+        //         height: 20,
+        //         decoration: BoxDecoration(
+        //           borderRadius: BorderRadius.circular(16),
+        //           color: Colors.blue,
+        //         ),
+        //         child: Text(
+        //           "Blue cluster",
+        //           style: GoogleFonts.montserrat(
+        //             color: Colors.white,
+        //           ),
+        //         ),
+        //       ),
+        //     ),
+        //     GestureDetector(
+        //       behavior: HitTestBehavior.opaque,
+        //       onTap: () {
+        //         controller.blueCluster = false;
+        //       },
+        //       child: Container(
+        //         width: 120,
+        //         height: 20,
+        //         decoration: BoxDecoration(
+        //           borderRadius: BorderRadius.circular(16),
+        //           color: Colors.red,
+        //         ),
+        //         child: Text(
+        //           "Red cluster",
+        //           style: GoogleFonts.montserrat(
+        //             color: Colors.white,
+        //           ),
+        //         ),
+        //       ),
+        //     ),
+        //   ],
+        // ),
+
+        // Expanded(
+        //   child: Container(
+        //     width: double.infinity,
+        //     height: double.infinity,
+        //     padding: EdgeInsets.all(5),
+        //     child: GetBuilder<ProjectionPlotUiController>(
+        //       builder: (_) => CanvasTouchDetector(builder: (context) {
+        //         return CustomPaint(
+        //           painter: ProjectionPlotPainter(
+        //             context: context,
+        //             xlim: widget.xlim,
+        //             ylim: widget.ylim,
+        //             positions: controller.currentPositions,
+        //             personsModels: widget.personModels,
+        //             onTap: widget.onTap,
+        //             // onTap: () {
+        //             //   print("Holi boli");
+        //             // },
+        //             // paintSelectArea: controller.showSelectedArea,
+        //             paintSelectArea: false,
+        //             selectedAreaStart: controller.selectedAreaStart,
+        //             selectedAreaEnd: controller.currentMouseLocation,
+        //           ),
+        //         );
+        //       }),
+        //     ),
+        //   ),
+        // ),
         Expanded(
           child: Listener(
             behavior: HitTestBehavior.translucent,
@@ -126,7 +155,11 @@ class _ProjectionPlotState extends State<ProjectionPlot>
                           positions: controller.currentPositions,
                           personsModels: widget.personModels,
                           onTap: widget.onTap,
-                          paintSelectArea: controller.showSelectedArea,
+                          // onTap: () {
+                          //   print("Holi boli");
+                          // },
+                          // paintSelectArea: controller.showSelectedArea,
+                          paintSelectArea: false,
                           selectedAreaStart: controller.selectedAreaStart,
                           selectedAreaEnd: controller.currentMouseLocation,
                         ),
@@ -142,27 +175,3 @@ class _ProjectionPlotState extends State<ProjectionPlot>
     );
   }
 }
-
-// class ProjectionPlot extends StatelessWidget {
-//   // List<List<double>> positions;
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       width: double.infinity,
-//       height: double.infinity,
-//       padding: EdgeInsets.all(5),
-//       child: CanvasTouchDetector(builder: (context) {
-//         return CustomPaint(
-//           painter: ProjectionPlotPainter(
-//               context: context,
-//               xlim: xlim,
-//               ylim: ylim,
-//               personsModels: personModels,
-//               // positions: positions,
-//               onTap: onTap),
-//         );
-//       }),
-//     );
-//   }
-// }

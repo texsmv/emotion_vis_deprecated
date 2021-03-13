@@ -25,7 +25,6 @@ dependencies:
     sdk: flutter
   cupertino_icons: ^1.0.0
   get: ^3.24.0
-  touchable:  0.1.7
   random_color: ^1.0.5
   graphic: ^0.3.0
 

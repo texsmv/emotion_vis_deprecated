@@ -6,7 +6,7 @@ import 'package:get/get.dart';
 import 'package:timeseries_charts/models/person_model.dart';
 import 'package:timeseries_charts/visualizations/vis_settings.dart';
 import 'package:timeseries_charts/visualizations/vis_utils.dart';
-import 'package:touchable/touchable.dart';
+import 'package:timeseries_charts/touchable/touchable.dart';
 
 class LinearChartPainter extends CustomPainter {
   PersonModel personModel;

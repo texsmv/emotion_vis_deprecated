@@ -3,3 +3,4 @@
 *.zip
 */datasets/*
 */__pycache__/*
+*fvm*

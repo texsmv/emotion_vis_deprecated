@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.optim import optimizer
 from dimensionality_reduction.fcae import TimeSeriesAE, DatasetMTS
-from models.time_series_dataset import TimeSeriesDataset
+from models.time_series_dataset import MTSerieDataset
 from utils.time_series_utils import distance_matrix, time_serie_from_eml
 from torch.utils.data import DataLoader
 import numpy as np
@@ -90,7 +90,7 @@ def weights_init(m):
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0)
 
-dataset =  TimeSeriesDataset() 
+dataset =  MTSerieDataset() 
 
 for file in files:
     mtserie = time_serie_from_eml(PATH + file)

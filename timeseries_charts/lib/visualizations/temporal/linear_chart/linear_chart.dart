@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:timeseries_charts/models/person_model.dart';
 import 'package:timeseries_charts/visualizations/vis_settings.dart';
-import 'package:touchable/touchable.dart';
+import 'package:timeseries_charts/touchable/touchable.dart';
 
 import 'linear_chart_painter.dart';
 

@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:emotion_vis/controllers/series_controller.dart';
 import 'package:emotion_vis/models/emotion_dimension.dart';
 import 'package:emotion_vis/models/person_model.dart';
 import 'package:emotion_vis/time_series/models/MTSerie.dart';
@@ -67,6 +68,7 @@ class ProjectionPlotPainter extends CustomPainter {
   Paint redPaint;
   Paint areaPaint;
   TouchyCanvas touchyCanvas;
+  SeriesController _seriesController = Get.find();
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -100,16 +102,21 @@ class ProjectionPlotPainter extends CustomPainter {
       if (personsModels[i].clusterId == null)
         paint = axisPaint;
       else {
-        if (personsModels[i].clusterId == 0) {
-          paint = bluePaint;
-        } else if (personsModels[i].clusterId == 1) {
-          paint = redPaint;
-        }
+        paint = Paint()
+          ..color = _seriesController.clustersColors[personsModels[i].clusterId]
+          ..style = PaintingStyle.fill
+          ..strokeCap = StrokeCap.round
+          ..strokeWidth = 3;
+        // if (personsModels[i].clusterId == 0) {
+        //   paint = bluePaint;
+        // } else if (personsModels[i].clusterId == 1) {
+        //   paint = redPaint;
+        // }
       }
 
       touchyCanvas.drawCircle(
         Offset(x, y),
-        4,
+        6,
         paint,
         onLongPressStart: (details) {
           if (onTap != null) {

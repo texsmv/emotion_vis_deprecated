@@ -15,9 +15,9 @@ class PersonModel {
   List<String> categoricalLabels;
   List<String> categoricalValues;
 
-  RxInt _clusterId = RxInt();
-  int get clusterId => _clusterId.value;
-  set clusterId(int value) => _clusterId.value = value;
+  RxString _clusterId = RxString();
+  String get clusterId => _clusterId.value;
+  set clusterId(String value) => _clusterId.value = value;
 
   PersonModel({this.id, this.mtSerie});
 

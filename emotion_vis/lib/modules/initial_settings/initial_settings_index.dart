@@ -119,7 +119,7 @@ class InitialSettingsIndex extends GetView<InitialSettingsController> {
           label: Text(
             "Next",
             style: TextStyle(color: Colors.white),
-          )),
+          ),),
     );
   }
 }

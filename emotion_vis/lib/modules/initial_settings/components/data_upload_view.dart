@@ -2,6 +2,7 @@ import 'package:emotion_vis/controllers/series_controller.dart';
 import 'package:emotion_vis/models/emotions_models.dart';
 import 'package:emotion_vis/models/time_unit.dart';
 import 'package:emotion_vis/modules/initial_settings/components/emotion_dimension_tile.dart';
+import 'package:emotion_vis/modules/initial_settings/components/time_serie_tile.dart';
 import 'package:emotion_vis/modules/initial_settings/initial_settings_controller.dart';
 import 'package:emotion_vis/utils/utils.dart';
 import 'package:emotion_vis/widgets/buttons/app_button.dart';
@@ -102,11 +103,15 @@ class DataUploadView extends GetView<InitialSettingsController> {
             Container(
               width: double.infinity,
               child: GetBuilder<SeriesController>(
-                builder: (_) => Column(
-                  children: List.generate(
-                      controller.emotionDimensionLength,
-                      (index) =>
-                          EmotionDimensionTile(emotionDimensionIndex: index)),
+                builder: (_) => GetBuilder<InitialSettingsController>(
+                  builder: (_) => Column(
+                    children: List.generate(
+                      controller.timeSeriesItems.length,
+                      (tIndex) => TimeSerieTile(
+                        timeSerieItem: controller.timeSeriesItems[tIndex],
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -114,52 +119,52 @@ class DataUploadView extends GetView<InitialSettingsController> {
               color: Get.theme.accentColor,
               thickness: 1,
             ),
-            Column(
-              children: [
-                Container(
-                  height: 50,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Lower bound:"),
-                      Container(
-                          width: 30,
-                          child: GetBuilder<SeriesController>(
-                              builder: (seriesController) {
-                            if (seriesController.lowerBound != null)
-                              controller.lowerBoundController.text =
-                                  seriesController.lowerBound
-                                      .toStringAsFixed(1);
-                            return TextField(
-                                textAlign: TextAlign.center,
-                                controller: controller.lowerBoundController);
-                          })),
-                    ],
-                  ),
-                ),
-                Container(
-                  height: 50,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text("Upper bound:"),
-                      Container(
-                          width: 30,
-                          child: GetBuilder<SeriesController>(
-                              builder: (seriesController) {
-                            if (seriesController.upperBound != null)
-                              controller.upperBoundController.text =
-                                  seriesController.upperBound
-                                      .toStringAsFixed(1);
-                            return TextField(
-                                textAlign: TextAlign.center,
-                                controller: controller.upperBoundController);
-                          })),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+            // Column(
+            //   children: [
+            //     Container(
+            //       height: 50,
+            //       child: Row(
+            //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //         children: [
+            //           Text("Lower bound:"),
+            //           Container(
+            //               width: 30,
+            //               child: GetBuilder<SeriesController>(
+            //                   builder: (seriesController) {
+            //                 if (seriesController.lowerBound != null)
+            //                   controller.lowerBoundController.text =
+            //                       seriesController.lowerBound
+            //                           .toStringAsFixed(1);
+            //                 return TextField(
+            //                     textAlign: TextAlign.center,
+            //                     controller: controller.lowerBoundController);
+            //               })),
+            //         ],
+            //       ),
+            //     ),
+            //     Container(
+            //       height: 50,
+            //       child: Row(
+            //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            //         children: [
+            //           Text("Upper bound:"),
+            //           Container(
+            //               width: 30,
+            //               child: GetBuilder<SeriesController>(
+            //                   builder: (seriesController) {
+            //                 if (seriesController.upperBound != null)
+            //                   controller.upperBoundController.text =
+            //                       seriesController.upperBound
+            //                           .toStringAsFixed(1);
+            //                 return TextField(
+            //                     textAlign: TextAlign.center,
+            //                     controller: controller.upperBoundController);
+            //               })),
+            //         ],
+            //       ),
+            //     ),
+            //   ],
+            // ),
             Divider(
               color: Get.theme.accentColor,
               thickness: 1,
